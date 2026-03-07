@@ -14,6 +14,8 @@ import io.github.jan.supabase.storage.storage
 import io.github.jan.supabase.postgrest.postgrest
 
 data class OnboardingState(
+    val email: String = "",
+    val password: String = "",
     val name: String = "",
     val gender: String = "",
     val age: String = "",
@@ -37,6 +39,39 @@ class OnboardingViewModel(application: Application) : AndroidViewModel(applicati
     init {
         viewModelScope.launch {
             _isOnboardingComplete.value = repository.isOnboardingComplete()
+        }
+    }
+
+    fun updateEmail(email: String) {
+        _state.value = _state.value.copy(email = email)
+    }
+
+    fun updatePassword(password: String) {
+        _state.value = _state.value.copy(password = password)
+    }
+
+    fun authenticateWithEmail(isSignUp: Boolean, onSuccess: () -> Unit, onError: (String) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val auth = com.meta.wearable.dat.externalsampleapps.cameraaccess.data.GymBroSupabaseClient.client.auth
+                val emailValue = _state.value.email
+                val passwordValue = _state.value.password
+                
+                if (isSignUp) {
+                    auth.signUpWith(io.github.jan.supabase.gotrue.providers.builtin.Email) {
+                        email = emailValue
+                        password = passwordValue
+                    }
+                } else {
+                    auth.signInWith(io.github.jan.supabase.gotrue.providers.builtin.Email) {
+                        email = emailValue
+                        password = passwordValue
+                    }
+                }
+                onSuccess()
+            } catch (e: Exception) {
+                onError(e.message ?: "Authentication failed")
+            }
         }
     }
 
