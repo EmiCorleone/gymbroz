@@ -129,6 +129,7 @@ class GeminiSessionViewModel : ViewModel() {
             stateObservationJob = viewModelScope.launch {
                 var wasSpeaking = false
                 var lastRepCount = -1
+                var lastRepInjectionTime = 0L
                 while (isActive) {
                     delay(100)
                     val isSpeaking = geminiService.isModelSpeaking.value
@@ -138,12 +139,16 @@ class GeminiSessionViewModel : ViewModel() {
                         wasSpeaking = isSpeaking
                     }
                     val poseData = poseDetectionManager?.overlayData?.value ?: PoseOverlayData()
-                    // Inject rep count updates into Gemini context
+                    // Inject rep count updates into Gemini context (throttled to every 5s)
                     val currentReps = poseData.repCount
-                    if (handler.repCounter.value.active && currentReps != lastRepCount && currentReps > 0) {
+                    val now = System.currentTimeMillis()
+                    if (handler.repCounter.value.active && currentReps != lastRepCount && currentReps > 0
+                        && now - lastRepInjectionTime > 5000) {
                         lastRepCount = currentReps
+                        lastRepInjectionTime = now
                         geminiService.sendContextText(
-                            "[System: Rep counter update — ${handler.repCounter.value.exercise}: $currentReps reps completed]"
+                            "[System update — do NOT respond to this message verbally unless asked. " +
+                            "Rep counter: ${handler.repCounter.value.exercise}, current count: $currentReps reps]"
                         )
                     }
                     _uiState.value = _uiState.value.copy(

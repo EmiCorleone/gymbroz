@@ -179,6 +179,7 @@ class GeminiLiveService {
     fun sendContextText(text: String) {
         if (_connectionState.value != GeminiConnectionState.Ready) return
         sendExecutor.execute {
+            Log.d(TAG, "Injecting context: $text")
             val json = JSONObject().apply {
                 put("clientContent", JSONObject().apply {
                     put("turns", JSONArray().put(JSONObject().apply {
@@ -187,7 +188,7 @@ class GeminiLiveService {
                             put("text", text)
                         }))
                     }))
-                    put("turnComplete", false)
+                    put("turnComplete", true)
                 })
             }
             webSocket?.send(json.toString())
