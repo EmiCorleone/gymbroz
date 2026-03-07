@@ -34,6 +34,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -89,7 +90,24 @@ fun OnboardingFlow(
             ) { step ->
                 when (step) {
                     0 -> SplashScreen()
-                    1 -> WelcomeScreen(onGetStarted = { currentStep = 2 })
+                    1 -> WelcomeScreen(
+                        onGetStarted = { currentStep = 2 },
+                        onSignIn = { currentStep = 99 }
+                    )
+                    99 -> EmailAuthScreen(
+                        email = state.email,
+                        password = state.password,
+                        onEmailChange = onboardingViewModel::updateEmail,
+                        onPasswordChange = onboardingViewModel::updatePassword,
+                        onBack = { currentStep = 1 },
+                        onAuthenticate = { isSignUp ->
+                            onboardingViewModel.authenticateWithEmail(isSignUp, onSuccess = {
+                                if (isSignUp) currentStep = 2 else onFinished()
+                            }, onError = { err -> 
+                                android.util.Log.e("Auth", "Failed: $err")
+                            })
+                        }
+                    )
                     2 -> NameScreen(name = state.name, onNameChange = onboardingViewModel::updateName, onBack = { currentStep = 1 }, onContinue = { currentStep = 3 })
                     3 -> GenderScreen(selected = state.gender, onSelect = onboardingViewModel::updateGender, onBack = { currentStep = 2 }, onContinue = { currentStep = 4 })
                     4 -> BodyStatsScreen(age = state.age, height = state.heightCm, weight = state.weightKg, onAgeChange = onboardingViewModel::updateAge, onHeightChange = onboardingViewModel::updateHeight, onWeightChange = onboardingViewModel::updateWeight, onBack = { currentStep = 3 }, onContinue = { currentStep = 5 })
@@ -178,7 +196,7 @@ private fun SplashScreen() {
 // ---- WELCOME ----
 
 @Composable
-private fun WelcomeScreen(onGetStarted: () -> Unit) {
+private fun WelcomeScreen(onGetStarted: () -> Unit, onSignIn: () -> Unit) {
     Box(modifier = Modifier.fillMaxSize()) {
         AnimatedMeshGradientBackground()
         Column(
@@ -203,9 +221,17 @@ private fun WelcomeScreen(onGetStarted: () -> Unit) {
             Spacer(modifier = Modifier.height(12.dp))
             Text("Real-time coaching through your Meta glasses.\nAutomatic rep counting. Zero friction.", fontSize = 15.sp, color = AppColor.TextSecondary, textAlign = TextAlign.Center, lineHeight = 22.sp)
             Spacer(modifier = Modifier.weight(1f))
-            GradientButton(text = "Get Started", onClick = onGetStarted)
+            GradientButton(text = "Get Started Anonymously", onClick = onGetStarted)
             Spacer(modifier = Modifier.height(16.dp))
-            Text("Already have an account? Sign In", fontSize = 14.sp, color = AppColor.TextMuted, modifier = Modifier.clickable { })
+            OutlinedButton(
+                onClick = onSignIn,
+                modifier = Modifier.fillMaxWidth().height(56.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = AppColor.TextPrimary),
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.2f))
+            ) {
+                Text("Sign in / Sign up with Email", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+            }
             Spacer(modifier = Modifier.height(24.dp))
         }
     }
@@ -223,6 +249,74 @@ private fun glassTextFieldColors() = OutlinedTextFieldDefaults.colors(
     focusedContainerColor = Color.White.copy(alpha = 0.06f),
     unfocusedContainerColor = Color.White.copy(alpha = 0.04f),
 )
+
+// ---- EMAIL AUTH ----
+
+@Composable
+private fun EmailAuthScreen(
+    email: String, password: String,
+    onEmailChange: (String) -> Unit, onPasswordChange: (String) -> Unit,
+    onBack: () -> Unit, onAuthenticate: (Boolean) -> Unit
+) {
+    var isSignUp by remember { mutableStateOf(false) }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        AnimatedMeshGradientBackground()
+        Column(modifier = Modifier.fillMaxSize()) {
+            OnboardingHeader(
+                title = if (isSignUp) "Create Account" else "Welcome Back",
+                subtitle = "Sign in to sync your GymBro data.",
+                progress = 1f, stepNumber = 1, totalSteps = 1, onBack = onBack
+            )
+            Spacer(modifier = Modifier.height(48.dp))
+            
+            Column(modifier = Modifier.padding(horizontal = 24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                // Email
+                Column {
+                    Text("Email", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = AppColor.TextSecondary, modifier = Modifier.padding(bottom = 8.dp))
+                    OutlinedTextField(
+                        value = email, onValueChange = onEmailChange, modifier = Modifier.fillMaxWidth(),
+                        placeholder = { Text("you@example.com", color = AppColor.TextMuted) },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                        colors = glassTextFieldColors(), shape = RoundedCornerShape(16.dp), singleLine = true,
+                        textStyle = LocalTextStyle.current.copy(fontSize = 16.sp)
+                    )
+                }
+                
+                // Password
+                Column {
+                    Text("Password", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = AppColor.TextSecondary, modifier = Modifier.padding(bottom = 8.dp))
+                    OutlinedTextField(
+                        value = password, onValueChange = onPasswordChange, modifier = Modifier.fillMaxWidth(),
+                        placeholder = { Text("••••••••", color = AppColor.TextMuted) },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                        visualTransformation = PasswordVisualTransformation(),
+                        colors = glassTextFieldColors(), shape = RoundedCornerShape(16.dp), singleLine = true,
+                        textStyle = LocalTextStyle.current.copy(fontSize = 16.sp)
+                    )
+                }
+            }
+            
+            Spacer(modifier = Modifier.weight(1f))
+            Box(modifier = Modifier.padding(24.dp)) {
+                Column {
+                    GradientButton(
+                        text = if (isSignUp) "Sign Up" else "Sign In",
+                        onClick = { onAuthenticate(isSignUp) },
+                        enabled = email.isNotBlank() && password.length >= 6
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = if (isSignUp) "Already have an account? Sign In" else "Don't have an account? Sign Up",
+                        fontSize = 14.sp, color = AppColor.TextMuted,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth().clickable { isSignUp = !isSignUp }
+                    )
+                }
+            }
+        }
+    }
+}
 
 // ---- NAME ----
 
