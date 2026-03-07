@@ -67,8 +67,15 @@ Open [http://localhost:3000](http://localhost:3000) in Chrome.
 ### Usage
 
 1. Click the **play button** to connect to Gemini
-2. Click the **camera icon** to enable your webcam
+2. Click the **camera icon** to enable your webcam (or stream from the Android sample app)
 3. **Talk to your coach** — it hears you and sees your camera feed
+
+### Meta AI Glasses Integration (Android Companion)
+This project includes an Android companion app built with the Meta Wearables Device Access Toolkit to stream video directly from your Meta AI glasses.
+- Navigate to the `android/` directory and open the project in Android Studio.
+- Turn 'Developer Mode' on in your Meta AI app.
+- Run the app and press "Connect" to stream your POV camera feed into the gym assistant.
+- *Refer to `android/README.md` for full setup instructions.*
 
 Try saying:
 - *"Count my bicep curls"* — activates pose detection and rep counting
@@ -88,6 +95,7 @@ The assistant is **proactive** — it will automatically start counting reps whe
 | Music Generation | Lyria RealTime (`models/lyria-realtime-exp`) | Streams instrumental music at 48kHz stereo |
 | Exercise Guide | Gemini Image Generation (`gemini-2.5-flash-image`) | Generates form guide images from camera frames |
 | Frontend | React 18 + TypeScript + CRA | Single-page app, no backend needed |
+| Smart Glasses Capture | Android / Kotlin / Meta Wearables DAT | Connects and streams video from Meta AI Glasses |
 
 ### Gemini Tools
 
@@ -106,6 +114,8 @@ The app registers 7 function declarations that Gemini can call:
 ## Project Structure
 
 ```
+android/                                  # Meta AI Glasses companion app
+│   └── app/src/main/                     # Android Kotlin entry point
 src/
 ├── components/
 │   ├── gym-tools/GymTools.tsx            # Central orchestrator — tool declarations + handlers
