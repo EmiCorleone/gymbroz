@@ -249,7 +249,7 @@ Also provide a brief 1-2 sentence text description of the key form cues.""")
                     })
                 }
 
-                val url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${GeminiConfig.apiKey}"
+                val url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${GeminiConfig.apiKey}"
 
                 val request = Request.Builder()
                     .url(url)
