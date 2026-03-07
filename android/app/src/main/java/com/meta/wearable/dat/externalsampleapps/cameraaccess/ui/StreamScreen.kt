@@ -72,7 +72,15 @@ fun StreamScreen(
                 geminiViewModel.poseDetectionManager =
                     com.meta.wearable.dat.externalsampleapps.cameraaccess.openclaw.PoseDetectionManager(context)
             } catch (e: UnsatisfiedLinkError) {
-                android.util.Log.w("StreamScreen", "MediaPipe not available on this architecture (emulator?): ${e.message}")
+                android.util.Log.w("StreamScreen", "MediaPipe pose not available: ${e.message}")
+            }
+        }
+        if (geminiViewModel.povRepCounter == null) {
+            try {
+                geminiViewModel.povRepCounter =
+                    com.meta.wearable.dat.externalsampleapps.cameraaccess.openclaw.PovRepCounter(context)
+            } catch (e: UnsatisfiedLinkError) {
+                android.util.Log.w("StreamScreen", "MediaPipe hand not available: ${e.message}")
             }
         }
     }

@@ -12,6 +12,7 @@ import com.meta.wearable.dat.externalsampleapps.cameraaccess.openclaw.GymToolHan
 import com.meta.wearable.dat.externalsampleapps.cameraaccess.openclaw.MusicState
 import com.meta.wearable.dat.externalsampleapps.cameraaccess.openclaw.MusicStreamingService
 import com.meta.wearable.dat.externalsampleapps.cameraaccess.openclaw.PoseDetectionManager
+import com.meta.wearable.dat.externalsampleapps.cameraaccess.openclaw.PovRepCounter
 import com.meta.wearable.dat.externalsampleapps.cameraaccess.openclaw.PoseOverlayData
 import com.meta.wearable.dat.externalsampleapps.cameraaccess.openclaw.RepCounterState
 import com.meta.wearable.dat.externalsampleapps.cameraaccess.openclaw.ToolCallStatus
@@ -51,6 +52,9 @@ class GeminiSessionViewModel(application: Application) : AndroidViewModel(applic
     private var gymToolHandler: GymToolHandler? = null
     private var musicService: MusicStreamingService? = null
     var poseDetectionManager: PoseDetectionManager? = null
+    var povRepCounter: PovRepCounter? = null
+    // When true, use POV hand tracking instead of 3rd-person pose detection
+    var usePovMode: Boolean = true
     private var lastVideoFrameTime: Long = 0
     private var stateObservationJob: Job? = null
 
@@ -146,7 +150,11 @@ class GeminiSessionViewModel(application: Application) : AndroidViewModel(applic
                         if (isSpeaking) music.duck() else music.unduck()
                         wasSpeaking = isSpeaking
                     }
-                    val poseData = poseDetectionManager?.overlayData?.value ?: PoseOverlayData()
+                    val poseData = if (usePovMode) {
+                        povRepCounter?.overlayData?.value ?: PoseOverlayData()
+                    } else {
+                        poseDetectionManager?.overlayData?.value ?: PoseOverlayData()
+                    }
                     // Inject rep count updates into Gemini context (throttled to every 5s)
                     val currentReps = poseData.repCount
                     val now = System.currentTimeMillis()
@@ -215,6 +223,7 @@ class GeminiSessionViewModel(application: Application) : AndroidViewModel(applic
         geminiService.disconnect()
         stateObservationJob?.cancel()
         stateObservationJob = null
+        povRepCounter?.reset()
         _uiState.value = GeminiUiState()
     }
 
@@ -222,11 +231,19 @@ class GeminiSessionViewModel(application: Application) : AndroidViewModel(applic
         latestFrame = bitmap
         gymToolHandler?.latestFrame = bitmap
 
-        // Run pose detection on every frame when rep counting is active (works without Gemini)
+        // Run rep counting on every frame when active (works without Gemini)
         if (_uiState.value.repCounter.active) {
-            val overlay = poseDetectionManager?.processFrame(bitmap)
+            val overlay = if (usePovMode) {
+                povRepCounter?.processFrame(bitmap)
+            } else {
+                poseDetectionManager?.processFrame(bitmap)
+            }
             if (overlay != null) {
-                val poseData = poseDetectionManager?.overlayData?.value ?: PoseOverlayData()
+                val poseData = if (usePovMode) {
+                    povRepCounter?.overlayData?.value ?: PoseOverlayData()
+                } else {
+                    poseDetectionManager?.overlayData?.value ?: PoseOverlayData()
+                }
                 _uiState.value = _uiState.value.copy(
                     repCounter = _uiState.value.repCounter.copy(repCount = poseData.repCount),
                     poseOverlay = poseData,
@@ -236,7 +253,6 @@ class GeminiSessionViewModel(application: Application) : AndroidViewModel(applic
 
         if (!_uiState.value.isGeminiActive) return
         if (_uiState.value.connectionState != GeminiConnectionState.Ready) return
-
         val now = System.currentTimeMillis()
         if (now - lastVideoFrameTime < GeminiConfig.VIDEO_FRAME_INTERVAL_MS) return
         lastVideoFrameTime = now
@@ -248,6 +264,7 @@ class GeminiSessionViewModel(application: Application) : AndroidViewModel(applic
         if (current.active) {
             // Stop rep counting
             poseDetectionManager?.reset()
+            povRepCounter?.reset()
             _uiState.value = _uiState.value.copy(
                 repCounter = RepCounterState(),
                 poseOverlay = PoseOverlayData(),
@@ -255,6 +272,7 @@ class GeminiSessionViewModel(application: Application) : AndroidViewModel(applic
         } else {
             // Start rep counting for bicep curls
             poseDetectionManager?.reset()
+            povRepCounter?.reset()
             _uiState.value = _uiState.value.copy(
                 repCounter = RepCounterState(active = true, exercise = "bicep_curl", repCount = 0),
             )
