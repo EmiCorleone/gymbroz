@@ -25,12 +25,11 @@ import com.meta.wearable.dat.core.types.Permission
 import com.meta.wearable.dat.core.types.PermissionStatus
 import com.meta.wearable.dat.externalsampleapps.cameraaccess.settings.SettingsManager
 import com.meta.wearable.dat.externalsampleapps.cameraaccess.ui.CameraAccessScaffold
+import com.meta.wearable.dat.externalsampleapps.cameraaccess.ui.navigation.MainAppContainer
 import com.meta.wearable.dat.externalsampleapps.cameraaccess.wearables.WearablesViewModel
 import com.meta.wearable.dat.externalsampleapps.cameraaccess.onboarding.OnboardingFlow
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import kotlin.coroutines.resume
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -85,15 +84,25 @@ class MainActivity : ComponentActivity() {
     }
 
     setContent {
-      var isOnboardingComplete by remember { mutableStateOf(false) }
+      val onboardingViewModel: com.meta.wearable.dat.externalsampleapps.cameraaccess.onboarding.OnboardingViewModel =
+          androidx.lifecycle.viewmodel.compose.viewModel()
+      val isOnboardingComplete by onboardingViewModel.isOnboardingComplete.collectAsState()
 
-      if (!isOnboardingComplete) {
-        OnboardingFlow(onFinished = { isOnboardingComplete = true })
-      } else {
-        CameraAccessScaffold(
-            viewModel = viewModel,
-            onRequestWearablesPermission = ::requestWearablesPermission,
-        )
+      when (isOnboardingComplete) {
+        null -> {
+          // Loading — show nothing (very brief)
+        }
+        false -> {
+          OnboardingFlow(onFinished = {
+            // Profile was saved by ViewModel, state will update automatically
+          }, onboardingViewModel = onboardingViewModel)
+        }
+        true -> {
+          MainAppContainer(
+              wearablesViewModel = viewModel,
+              onRequestWearablesPermission = ::requestWearablesPermission,
+          )
+        }
       }
     }
   }

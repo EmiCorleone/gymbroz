@@ -10,6 +10,7 @@ plugins {
   alias(libs.plugins.android.application)
   alias(libs.plugins.jetbrains.kotlin.android)
   alias(libs.plugins.compose.compiler)
+  alias(libs.plugins.ksp)
 }
 
 android {
@@ -77,6 +78,12 @@ dependencies {
   implementation(libs.gson)
   implementation(libs.lifecycle.process)
   implementation(libs.mediapipe.pose)
+  // Room database
+  implementation(libs.room.runtime)
+  implementation(libs.room.ktx)
+  ksp(libs.room.compiler)
+  // Navigation
+  implementation(libs.navigation.compose)
   androidTestImplementation(libs.androidx.ui.test.junit4)
   androidTestImplementation(libs.androidx.test.uiautomator)
   androidTestImplementation(libs.androidx.test.rules)
