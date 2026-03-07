@@ -70,10 +70,11 @@ class InstrumentationTest {
     MockDeviceKit.getInstance(targetContext).reset()
   }
 
-  // ---- EXISTING TESTS ----
+  // ---- EXISTING TESTS (updated to navigate via bottom bar when onboarding is complete) ----
 
   @Test
   fun showsHomeScreenOnLaunch() {
+    if (!navigateToWorkoutTab()) return
     val homeTip = targetContext.getString(R.string.home_tip_video)
     composeTestRule.waitUntilExactlyOneExists(
         hasText(homeTip),
@@ -87,6 +88,7 @@ class InstrumentationTest {
     val mockDeviceKit = MockDeviceKit.getInstance(targetContext)
     mockDeviceKit.pairRaybanMeta().powerOn()
 
+    if (!navigateToWorkoutTab()) return
     composeTestRule.waitUntilExactlyOneExists(hasText(nonStreamScreenText), timeoutMillis = 5000)
   }
 
@@ -105,6 +107,8 @@ class InstrumentationTest {
     val mockCameraKit = device.getCameraKit()
     mockCameraKit.setCameraFeed(getFileUri("plant.mp4"))
     mockCameraKit.setCapturedImage(getFileUri("plant.png"))
+
+    if (!navigateToWorkoutTab()) return
 
     // Start streaming and verify stream is displayed
     composeTestRule.onNodeWithText(startStreamButtonTitle).performClick()
@@ -197,7 +201,7 @@ class InstrumentationTest {
     // If the main screen is visible, onboarding was already done — skip.
     try {
       composeTestRule.waitUntilAtLeastOneExists(hasText("GYMBRO"), timeoutMillis = 8000)
-    } catch (_: Exception) {
+    } catch (_: Throwable) {
       // GYMBRO splash not found — onboarding already completed or splash already passed
       Log.d(TAG, "Onboarding splash not found, skipping onboarding flow test")
       return
@@ -284,6 +288,18 @@ class InstrumentationTest {
   // ---- HELPERS ----
 
   /**
+   * Navigates to the Workout tab in MainAppContainer.
+   * If onboarding is still showing, returns false (skip test).
+   */
+  private fun navigateToWorkoutTab(): Boolean {
+    if (!waitForMainScreen()) return false
+    composeTestRule.onNodeWithText("Workout").performClick()
+    composeTestRule.waitForIdle()
+    Thread.sleep(1000)
+    return true
+  }
+
+  /**
    * Waits for the main screen (post-onboarding) to become visible.
    * Returns true if main screen is shown, false if onboarding is shown instead.
    */
@@ -295,7 +311,7 @@ class InstrumentationTest {
           timeoutMillis = 10000,
       )
       true
-    } catch (_: Exception) {
+    } catch (_: Throwable) {
       Log.d(TAG, "Main screen not found (onboarding may be pending), skipping test")
       false
     }

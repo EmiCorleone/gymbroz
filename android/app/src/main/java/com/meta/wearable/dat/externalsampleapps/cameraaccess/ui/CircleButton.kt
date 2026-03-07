@@ -20,7 +20,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -35,19 +34,9 @@ fun CircleButton(
   Button(
       modifier = modifier
           .aspectRatio(1f)
-          .border(
-              width = 1.dp,
-              brush = Brush.linearGradient(
-                  listOf(
-                      Color.White.copy(alpha = 0.3f),
-                      Color.White.copy(alpha = 0.08f),
-                      Color.White.copy(alpha = 0.2f),
-                  )
-              ),
-              shape = CircleShape,
-          ),
+          .border(1.dp, Color.White.copy(alpha = 0.15f), CircleShape),
       onClick = onClick,
-      colors = ButtonDefaults.buttonColors(containerColor = Color.White.copy(alpha = 0.12f)),
+      colors = ButtonDefaults.buttonColors(containerColor = Color.White.copy(alpha = 0.10f)),
       shape = CircleShape,
       contentPadding = PaddingValues(0.dp),
       content = content,

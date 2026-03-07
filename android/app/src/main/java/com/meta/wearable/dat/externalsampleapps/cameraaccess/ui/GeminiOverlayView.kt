@@ -93,16 +93,7 @@ fun GeminiOverlay(
             )
         }
 
-        val guide = uiState.exerciseGuide
-        if (guide.isGenerating || guide.imageBase64 != null || guide.error != null) {
-            ExerciseGuideOverlay(
-                isGenerating = guide.isGenerating,
-                imageBase64 = guide.imageBase64,
-                description = guide.description,
-                error = guide.error,
-                onDismiss = onDismissExerciseGuide,
-            )
-        }
+        // Exercise guide overlay is rendered by StreamScreen to avoid double-rendering
     }
 }
 

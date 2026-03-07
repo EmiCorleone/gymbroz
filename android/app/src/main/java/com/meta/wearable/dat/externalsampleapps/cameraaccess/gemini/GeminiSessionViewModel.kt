@@ -1,9 +1,11 @@
 package com.meta.wearable.dat.externalsampleapps.cameraaccess.gemini
 
+import android.app.Application
 import android.graphics.Bitmap
 import android.util.Log
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.meta.wearable.dat.externalsampleapps.cameraaccess.data.WorkoutRepository
 import com.meta.wearable.dat.externalsampleapps.cameraaccess.openclaw.ExerciseGuideState
 import com.meta.wearable.dat.externalsampleapps.cameraaccess.openclaw.GeminiFunctionCall
 import com.meta.wearable.dat.externalsampleapps.cameraaccess.openclaw.GymToolHandler
@@ -36,7 +38,7 @@ data class GeminiUiState(
     val poseOverlay: PoseOverlayData = PoseOverlayData(),
 )
 
-class GeminiSessionViewModel : ViewModel() {
+class GeminiSessionViewModel(application: Application) : AndroidViewModel(application) {
     companion object {
         private const val TAG = "GeminiSessionVM"
     }
@@ -53,6 +55,10 @@ class GeminiSessionViewModel : ViewModel() {
     private var stateObservationJob: Job? = null
 
     var streamingMode: StreamingMode = StreamingMode.GLASSES
+
+    private suspend fun loadMirrorPhotoPath(): String? {
+        return WorkoutRepository(getApplication()).getProfile()?.mirrorPhotoPath
+    }
 
     fun startSession() {
         if (_uiState.value.isGeminiActive) return
@@ -112,6 +118,7 @@ class GeminiSessionViewModel : ViewModel() {
             val music = MusicStreamingService(viewModelScope)
             musicService = music
             val handler = GymToolHandler(viewModelScope, music)
+            handler.mirrorPhotoPath = loadMirrorPhotoPath()
             gymToolHandler = handler
 
             geminiService.onToolCall = { toolCall ->
@@ -214,18 +221,44 @@ class GeminiSessionViewModel : ViewModel() {
     fun sendVideoFrameIfThrottled(bitmap: Bitmap) {
         latestFrame = bitmap
         gymToolHandler?.latestFrame = bitmap
+
+        // Run pose detection on every frame when rep counting is active (works without Gemini)
+        if (_uiState.value.repCounter.active) {
+            val overlay = poseDetectionManager?.processFrame(bitmap)
+            if (overlay != null) {
+                val poseData = poseDetectionManager?.overlayData?.value ?: PoseOverlayData()
+                _uiState.value = _uiState.value.copy(
+                    repCounter = _uiState.value.repCounter.copy(repCount = poseData.repCount),
+                    poseOverlay = poseData,
+                )
+            }
+        }
+
         if (!_uiState.value.isGeminiActive) return
         if (_uiState.value.connectionState != GeminiConnectionState.Ready) return
-
-        // Run pose detection on every frame (not throttled)
-        if (_uiState.value.repCounter.active) {
-            poseDetectionManager?.processFrame(bitmap)
-        }
 
         val now = System.currentTimeMillis()
         if (now - lastVideoFrameTime < GeminiConfig.VIDEO_FRAME_INTERVAL_MS) return
         lastVideoFrameTime = now
         geminiService.sendVideoFrame(bitmap)
+    }
+
+    fun toggleRepCounting() {
+        val current = _uiState.value.repCounter
+        if (current.active) {
+            // Stop rep counting
+            poseDetectionManager?.reset()
+            _uiState.value = _uiState.value.copy(
+                repCounter = RepCounterState(),
+                poseOverlay = PoseOverlayData(),
+            )
+        } else {
+            // Start rep counting for bicep curls
+            poseDetectionManager?.reset()
+            _uiState.value = _uiState.value.copy(
+                repCounter = RepCounterState(active = true, exercise = "bicep_curl", repCount = 0),
+            )
+        }
     }
 
     // Store latest frame even without Gemini active (for test button)
@@ -234,24 +267,10 @@ class GeminiSessionViewModel : ViewModel() {
     private var testHandler: GymToolHandler? = null
 
     fun testExerciseGuide() {
-        Log.d(TAG, "testExerciseGuide called, latestFrame=${latestFrame != null}")
+        Log.d(TAG, "testExerciseGuide called, geminiActive=${_uiState.value.isGeminiActive}")
         if (_uiState.value.exerciseGuide.isGenerating) return // already in progress
-
-        val frame = latestFrame ?: gymToolHandler?.latestFrame
-        if (frame == null) {
-            Log.e(TAG, "No camera frame available for exercise guide")
-            _uiState.value = _uiState.value.copy(
-                exerciseGuide = ExerciseGuideState(error = "No camera frame available")
-            )
-            return
-        }
-
-        val handler = gymToolHandler ?: run {
-            val h = testHandler ?: GymToolHandler(viewModelScope, MusicStreamingService(viewModelScope))
-            testHandler = h
-            h
-        }
-        handler.latestFrame = frame
+        // When Gemini is active, the AI handles exercise guide via tool calls — don't duplicate
+        if (_uiState.value.isGeminiActive) return
 
         _uiState.value = _uiState.value.copy(
             exerciseGuide = ExerciseGuideState(isGenerating = true)
@@ -259,6 +278,13 @@ class GeminiSessionViewModel : ViewModel() {
 
         testGuideJob?.cancel()
         testGuideJob = viewModelScope.launch {
+            val handler = testHandler ?: GymToolHandler(viewModelScope, MusicStreamingService(viewModelScope))
+            testHandler = handler
+            // Always load the mirror photo path from the profile
+            handler.mirrorPhotoPath = loadMirrorPhotoPath()
+
+            Log.d(TAG, "testExerciseGuide: mirrorPhotoPath=${handler.mirrorPhotoPath}")
+
             handler.handleToolCall(
                 GeminiFunctionCall(
                     id = "test_guide_${System.currentTimeMillis()}",
@@ -267,18 +293,28 @@ class GeminiSessionViewModel : ViewModel() {
                 )
             ) { /* ignore tool response */ }
 
-            // Wait for result
-            handler.exerciseGuide.collect { guideState ->
+            // Poll handler state until result arrives
+            var pollCount = 0
+            while (isActive) {
+                delay(200)
+                val guideState = handler.exerciseGuide.value
                 _uiState.value = _uiState.value.copy(exerciseGuide = guideState)
+                pollCount++
+                if (pollCount % 10 == 0) {
+                    Log.d(TAG, "testExerciseGuide poll #$pollCount: isGenerating=${guideState.isGenerating}, hasImage=${guideState.imageBase64 != null}, error=${guideState.error}")
+                }
                 if (!guideState.isGenerating && (guideState.imageBase64 != null || guideState.error != null)) {
-                    return@collect
+                    Log.d(TAG, "testExerciseGuide: result arrived! hasImage=${guideState.imageBase64 != null}, error=${guideState.error}")
+                    break
                 }
             }
         }
     }
 
     fun dismissExerciseGuide() {
+        testGuideJob?.cancel()
         gymToolHandler?.dismissExerciseGuide()
+        testHandler?.dismissExerciseGuide()
         _uiState.value = _uiState.value.copy(exerciseGuide = ExerciseGuideState())
     }
 

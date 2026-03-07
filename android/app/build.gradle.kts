@@ -15,7 +15,7 @@ plugins {
 
 android {
   namespace = "com.meta.wearable.dat.externalsampleapps.cameraaccess"
-  compileSdk = 35
+  compileSdk = 36
 
   buildFeatures { buildConfig = true }
 
@@ -87,4 +87,6 @@ dependencies {
   androidTestImplementation(libs.androidx.ui.test.junit4)
   androidTestImplementation(libs.androidx.test.uiautomator)
   androidTestImplementation(libs.androidx.test.rules)
+  androidTestImplementation(libs.androidx.test.espresso.core)
+  androidTestImplementation(libs.androidx.test.runner)
 }

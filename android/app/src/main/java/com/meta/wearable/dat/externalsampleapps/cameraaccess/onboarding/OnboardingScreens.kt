@@ -50,6 +50,7 @@ import com.meta.wearable.dat.externalsampleapps.cameraaccess.ui.theme.glassBorde
 import com.meta.wearable.dat.externalsampleapps.cameraaccess.ui.theme.glassShimmer
 import kotlinx.coroutines.delay
 import java.io.File
+import java.io.FileOutputStream
 
 private const val TOTAL_STEPS = 8
 
@@ -384,6 +385,8 @@ private fun MirrorPhotoScreen(photoPath: String?, onPhotoTaken: (String) -> Unit
     val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success ->
         if (success && tempPhotoUri != null) {
             val file = getPhotoFile(context)
+            // Fix EXIF rotation: re-save with correct orientation baked in
+            fixImageRotation(file)
             capturedBitmap = BitmapFactory.decodeFile(file.absolutePath)
             onPhotoTaken(file.absolutePath)
         }
@@ -471,6 +474,43 @@ private fun getPhotoFile(context: Context): File {
     val dir = File(context.filesDir, "photos")
     dir.mkdirs()
     return File(dir, "mirror_selfie.jpg")
+}
+
+private fun fixImageRotation(file: File) {
+    try {
+        val exif = androidx.exifinterface.media.ExifInterface(file.absolutePath)
+        val orientation = exif.getAttributeInt(
+            androidx.exifinterface.media.ExifInterface.TAG_ORIENTATION,
+            androidx.exifinterface.media.ExifInterface.ORIENTATION_NORMAL
+        )
+        val rotation = when (orientation) {
+            androidx.exifinterface.media.ExifInterface.ORIENTATION_ROTATE_90 -> 90f
+            androidx.exifinterface.media.ExifInterface.ORIENTATION_ROTATE_180 -> 180f
+            androidx.exifinterface.media.ExifInterface.ORIENTATION_ROTATE_270 -> 270f
+            else -> 0f
+        }
+        if (rotation == 0f) return
+
+        val bitmap = BitmapFactory.decodeFile(file.absolutePath) ?: return
+        val matrix = android.graphics.Matrix().apply { postRotate(rotation) }
+        val rotated = Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+        bitmap.recycle()
+
+        FileOutputStream(file).use { out ->
+            rotated.compress(Bitmap.CompressFormat.JPEG, 95, out)
+        }
+        rotated.recycle()
+
+        // Clear EXIF orientation since rotation is now baked in
+        val newExif = androidx.exifinterface.media.ExifInterface(file.absolutePath)
+        newExif.setAttribute(
+            androidx.exifinterface.media.ExifInterface.TAG_ORIENTATION,
+            androidx.exifinterface.media.ExifInterface.ORIENTATION_NORMAL.toString()
+        )
+        newExif.saveAttributes()
+    } catch (e: Exception) {
+        android.util.Log.w("OnboardingScreens", "Failed to fix image rotation: ${e.message}")
+    }
 }
 
 // ---- CHART ----

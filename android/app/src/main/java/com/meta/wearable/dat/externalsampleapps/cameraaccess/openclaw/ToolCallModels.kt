@@ -181,7 +181,7 @@ object GymToolDeclarations {
 
     private fun generateExerciseGuide() = JSONObject().apply {
         put("name", "generate_exercise_guide")
-        put("description", "Takes a photo of the gym machine the user is looking at and generates an image showing proper exercise form on that machine. Use this when the user asks how to use a machine, wants to see correct form, or asks about an exercise on specific equipment.")
+        put("description", "Uses the user's profile photo to generate a personalized image showing them performing an exercise with correct form. Use this when the user asks how to do an exercise, wants to see correct form, or asks about proper technique.")
         put("parameters", JSONObject().apply {
             put("type", "object")
             put("properties", JSONObject().apply {
