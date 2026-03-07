@@ -126,26 +126,23 @@ class OnboardingViewModel(application: Application) : AndroidViewModel(applicati
                 }
 
                 val s = _state.value
-                var finalPhotoPath = s.mirrorPhotoPath
+                val localPhotoPath = s.mirrorPhotoPath
+                var remotePhotoUrl: String? = null
 
                 // Upload the mirror photo to Supabase Storage if it exists
-                if (finalPhotoPath != null) {
-                    val file = java.io.File(finalPhotoPath)
+                if (localPhotoPath != null) {
+                    val file = java.io.File(localPhotoPath)
                     if (file.exists()) {
                         val userId = auth.currentUserOrNull()?.id ?: "unknown"
-                        // Upload to gymbro_assets/{userId}/mirror_photo.jpg
                         val storage = com.meta.wearable.dat.externalsampleapps.cameraaccess.data.GymBroSupabaseClient.client.storage
                         val bucket = storage.from("gymbro_assets")
                         val remotePath = "$userId/mirror_photo_${System.currentTimeMillis()}.jpg"
-                        
-                        // Use put to upload the bytes
                         bucket.upload(remotePath, file.readBytes(), upsert = true)
-                        
-                        // Get the public URL to save in the database
-                        finalPhotoPath = bucket.publicUrl(remotePath)
+                        remotePhotoUrl = bucket.publicUrl(remotePath)
                     }
                 }
 
+                // Save LOCAL path in Room so the profile image loads from disk
                 val profile = UserProfile(
                     name = s.name,
                     gender = s.gender,
@@ -155,7 +152,7 @@ class OnboardingViewModel(application: Application) : AndroidViewModel(applicati
                     fitnessGoal = s.fitnessGoal,
                     experienceLevel = s.experienceLevel,
                     weeklyWorkouts = s.weeklyWorkouts,
-                    mirrorPhotoPath = finalPhotoPath
+                    mirrorPhotoPath = localPhotoPath
                 )
                 
                 // Save locally first for offline support and immediate UI updates
@@ -193,7 +190,7 @@ class OnboardingViewModel(application: Application) : AndroidViewModel(applicati
                     fitness_goal = profile.fitnessGoal,
                     experience_level = profile.experienceLevel,
                     weekly_workouts = profile.weeklyWorkouts,
-                    mirror_photo_url = profile.mirrorPhotoPath
+                    mirror_photo_url = remotePhotoUrl ?: profile.mirrorPhotoPath
                 )
                 
                 postgrest.from("user_profiles").upsert(supabaseProfile)

@@ -6,13 +6,14 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 
 @Database(
-    entities = [UserProfile::class, WorkoutSession::class, ExerciseSet::class],
-    version = 2,
+    entities = [UserProfile::class, WorkoutSession::class, ExerciseSet::class, ExerciseGuideImage::class],
+    version = 3,
     exportSchema = false
 )
 abstract class GymBroDatabase : RoomDatabase() {
     abstract fun userProfileDao(): UserProfileDao
     abstract fun workoutDao(): WorkoutDao
+    abstract fun exerciseGuideDao(): ExerciseGuideDao
 
     companion object {
         @Volatile
