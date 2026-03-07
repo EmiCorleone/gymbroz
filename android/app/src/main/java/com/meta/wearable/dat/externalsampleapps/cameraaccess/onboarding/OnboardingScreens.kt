@@ -479,7 +479,18 @@ private fun MirrorPhotoScreen(photoPath: String?, onPhotoTaken: (String) -> Unit
     val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success ->
         if (success && tempPhotoUri != null) {
             val file = getPhotoFile(context)
-            // Fix EXIF rotation: re-save with correct orientation baked in
+            fixImageRotation(file)
+            capturedBitmap = BitmapFactory.decodeFile(file.absolutePath)
+            onPhotoTaken(file.absolutePath)
+        }
+    }
+
+    val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        if (uri != null) {
+            val file = getPhotoFile(context)
+            context.contentResolver.openInputStream(uri)?.use { input ->
+                FileOutputStream(file).use { output -> input.copyTo(output) }
+            }
             fixImageRotation(file)
             capturedBitmap = BitmapFactory.decodeFile(file.absolutePath)
             onPhotoTaken(file.absolutePath)
@@ -502,12 +513,7 @@ private fun MirrorPhotoScreen(photoPath: String?, onPhotoTaken: (String) -> Unit
                     .clip(captureShape)
                     .background(Color.White.copy(alpha = 0.04f))
                     .glassBorder(captureShape)
-                    .then(if (capturedBitmap == null) Modifier.glassShimmer() else Modifier)
-                    .clickable {
-                        val file = getPhotoFile(context)
-                        tempPhotoUri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
-                        cameraLauncher.launch(tempPhotoUri!!)
-                    },
+                    .then(if (capturedBitmap == null) Modifier.glassShimmer() else Modifier),
                 contentAlignment = Alignment.Center
             ) {
                 if (capturedBitmap != null) {
@@ -517,13 +523,31 @@ private fun MirrorPhotoScreen(photoPath: String?, onPhotoTaken: (String) -> Unit
                         modifier = Modifier.fillMaxSize().clip(captureShape),
                         contentScale = ContentScale.Crop
                     )
-                    Box(
-                        modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp)
-                            .clip(CircleShape)
-                            .background(Color.White.copy(alpha = 0.1f))
-                            .border(1.dp, Color.White.copy(alpha = 0.2f), CircleShape)
-                            .padding(horizontal = 16.dp, vertical = 8.dp)
-                    ) { Text("Re-take", color = AppColor.Accent, fontSize = 14.sp, fontWeight = FontWeight.SemiBold) }
+                    Row(
+                        modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .clip(CircleShape)
+                                .background(Color.White.copy(alpha = 0.1f))
+                                .border(1.dp, Color.White.copy(alpha = 0.2f), CircleShape)
+                                .clickable {
+                                    val file = getPhotoFile(context)
+                                    tempPhotoUri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+                                    cameraLauncher.launch(tempPhotoUri!!)
+                                }
+                                .padding(horizontal = 16.dp, vertical = 8.dp)
+                        ) { Text("Re-take", color = AppColor.Accent, fontSize = 14.sp, fontWeight = FontWeight.SemiBold) }
+                        Box(
+                            modifier = Modifier
+                                .clip(CircleShape)
+                                .background(Color.White.copy(alpha = 0.1f))
+                                .border(1.dp, Color.White.copy(alpha = 0.2f), CircleShape)
+                                .clickable { galleryLauncher.launch("image/*") }
+                                .padding(horizontal = 16.dp, vertical = 8.dp)
+                        ) { Text("Gallery", color = AppColor.Accent, fontSize = 14.sp, fontWeight = FontWeight.SemiBold) }
+                    }
                 } else {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Box(
@@ -544,9 +568,38 @@ private fun MirrorPhotoScreen(photoPath: String?, onPhotoTaken: (String) -> Unit
                             contentAlignment = Alignment.Center
                         ) { Text("\uD83D\uDCF8", fontSize = 36.sp) }
                         Spacer(modifier = Modifier.height(16.dp))
-                        Text("Tap to take photo", fontSize = 16.sp, color = AppColor.TextSecondary, fontWeight = FontWeight.Medium)
-                        Spacer(modifier = Modifier.height(4.dp))
                         Text("Full body in the mirror", fontSize = 13.sp, color = AppColor.TextMuted)
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(AppColor.Accent.copy(alpha = 0.12f))
+                                    .border(
+                                        1.dp,
+                                        Brush.linearGradient(listOf(AppColor.Accent.copy(alpha = 0.4f), AppColor.Accent.copy(alpha = 0.1f))),
+                                        RoundedCornerShape(16.dp),
+                                    )
+                                    .clickable {
+                                        val file = getPhotoFile(context)
+                                        tempPhotoUri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+                                        cameraLauncher.launch(tempPhotoUri!!)
+                                    }
+                                    .padding(horizontal = 20.dp, vertical = 12.dp),
+                            ) { Text("Take Photo", color = AppColor.Accent, fontSize = 15.sp, fontWeight = FontWeight.SemiBold) }
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(Color.White.copy(alpha = 0.08f))
+                                    .border(
+                                        1.dp,
+                                        Brush.linearGradient(listOf(Color.White.copy(alpha = 0.2f), Color.White.copy(alpha = 0.05f))),
+                                        RoundedCornerShape(16.dp),
+                                    )
+                                    .clickable { galleryLauncher.launch("image/*") }
+                                    .padding(horizontal = 20.dp, vertical = 12.dp),
+                            ) { Text("Upload", color = AppColor.TextSecondary, fontSize = 15.sp, fontWeight = FontWeight.SemiBold) }
+                        }
                     }
                 }
             }

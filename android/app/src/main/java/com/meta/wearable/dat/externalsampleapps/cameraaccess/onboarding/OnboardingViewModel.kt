@@ -160,7 +160,10 @@ class OnboardingViewModel(application: Application) : AndroidViewModel(applicati
                 
                 // Save locally first for offline support and immediate UI updates
                 repository.saveProfile(profile)
-                
+
+                // Save gender + frequency for workout plan generation
+                OnboardingRepository(getApplication()).save(s.gender, s.weeklyWorkouts)
+
                 // Push to Supabase Postgres
                 val postgrest = com.meta.wearable.dat.externalsampleapps.cameraaccess.data.GymBroSupabaseClient.client.postgrest
                 val userId = auth.currentUserOrNull()?.id ?: return@launch
@@ -214,6 +217,7 @@ class OnboardingViewModel(application: Application) : AndroidViewModel(applicati
                     mirrorPhotoPath = s.mirrorPhotoPath
                 )
                 repository.saveProfile(profile)
+                OnboardingRepository(getApplication()).save(s.gender, s.weeklyWorkouts)
                 _isOnboardingComplete.value = true
                 onComplete()
             }

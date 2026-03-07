@@ -44,6 +44,14 @@ object SettingsManager {
         get() = prefs.getString("webrtcSignalingURL", null) ?: Secrets.webrtcSignalingURL
         set(value) = prefs.edit().putString("webrtcSignalingURL", value).apply()
 
+    var supabaseUrl: String
+        get() = prefs.getString("supabaseUrl", null) ?: Secrets.supabaseUrl
+        set(value) = prefs.edit().putString("supabaseUrl", value).apply()
+
+    var supabaseAnonKey: String
+        get() = prefs.getString("supabaseAnonKey", null) ?: Secrets.supabaseAnonKey
+        set(value) = prefs.edit().putString("supabaseAnonKey", value).apply()
+
     fun resetAll() {
         prefs.edit().clear().apply()
     }

@@ -89,15 +89,17 @@ class MainActivity : ComponentActivity() {
       viewModel.startMonitoring()
     }
     
-    // Ensure Supabase anonymous session exists on boot
-    lifecycleScope.launch {
-        try {
-            val auth = com.meta.wearable.dat.externalsampleapps.cameraaccess.data.GymBroSupabaseClient.client.auth
-            if (auth.currentSessionOrNull() == null) {
-                auth.signInAnonymously()
+    // Ensure Supabase anonymous session exists on boot (skip if not configured)
+    if (com.meta.wearable.dat.externalsampleapps.cameraaccess.BuildConfig.SUPABASE_URL.isNotBlank()) {
+        lifecycleScope.launch {
+            try {
+                val auth = com.meta.wearable.dat.externalsampleapps.cameraaccess.data.GymBroSupabaseClient.client.auth
+                if (auth.currentSessionOrNull() == null) {
+                    auth.signInAnonymously()
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
         }
     }
 

@@ -28,8 +28,8 @@ android {
       localProperties.load(FileInputStream(localPropertiesFile))
   }
   
-  val supabaseUrl = localProperties.getProperty("SUPABASE_URL") ?: "\"\""
-  val supabaseAnonKey = localProperties.getProperty("SUPABASE_ANON_KEY") ?: "\"\""
+  val supabaseUrl = localProperties.getProperty("SUPABASE_URL") ?: ""
+  val supabaseAnonKey = localProperties.getProperty("SUPABASE_ANON_KEY") ?: ""
 
   defaultConfig {
     applicationId = "com.meta.wearable.dat.externalsampleapps.cameraaccess"
