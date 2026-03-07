@@ -159,11 +159,8 @@ fun DashboardScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // ---- START WORKOUT BUTTON ----
-            GradientButton(
-                text = "Start Workout \uD83C\uDFCB\uFE0F",
-                onClick = onStartWorkout
-            )
+            // ---- START WORKOUT HERO CARD ----
+            StartWorkoutCard(onStartWorkout = onStartWorkout)
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -373,6 +370,87 @@ private fun EmptyWorkoutState() {
                 "Start your first workout and your\nstats will appear here",
                 fontSize = 14.sp, color = AppColor.TextMuted, textAlign = TextAlign.Center, lineHeight = 20.sp
             )
+        }
+    }
+}
+
+// ---- START WORKOUT HERO CARD ----
+
+@Composable
+private fun StartWorkoutCard(onStartWorkout: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(140.dp)
+            .clip(RoundedCornerShape(24.dp))
+            .clickable { onStartWorkout() }
+    ) {
+        // Dynamic gradient background
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.linearGradient(
+                        colors = listOf(
+                            Color(0xFF2E7D32), // Darker vibrant green
+                            AppColor.Accent,
+                            AppColor.Primary.copy(alpha = 0.8f)
+                        ),
+                        start = Offset(0f, 0f),
+                        end = Offset(1000f, 1000f)
+                    )
+                )
+        )
+        // Overlay pattern or subtle noise could go here
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.2f)) // Darken slightly for text readability
+        )
+
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = "Ready to crush it?",
+                    color = Color.White.copy(alpha = 0.9f),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Start Workout",
+                    color = Color.White,
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = (-0.5).sp
+                )
+            }
+            
+            // Play button icon
+            Box(
+                modifier = Modifier
+                    .size(56.dp)
+                    .clip(CircleShape)
+                    .background(Color.White.copy(alpha = 0.2f))
+                    .border(2.dp, Color.White.copy(alpha = 0.5f), CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.FitnessCenter,
+                    contentDescription = "Start",
+                    tint = Color.White,
+                    modifier = Modifier.size(28.dp)
+                )
+            }
         }
     }
 }
