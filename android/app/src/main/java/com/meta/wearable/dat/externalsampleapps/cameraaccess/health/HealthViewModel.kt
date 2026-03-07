@@ -8,6 +8,7 @@ import android.util.Base64
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.meta.wearable.dat.externalsampleapps.cameraaccess.data.CachedWorkoutPlan
 import com.meta.wearable.dat.externalsampleapps.cameraaccess.data.ExerciseGuideImage
 import com.meta.wearable.dat.externalsampleapps.cameraaccess.data.GymBroDatabase
 import com.meta.wearable.dat.externalsampleapps.cameraaccess.health.data.*
@@ -63,11 +64,30 @@ data class HealthUiState(
 class HealthViewModel(application: Application) : AndroidViewModel(application) {
     private val _uiState = MutableStateFlow(HealthUiState())
     val uiState: StateFlow<HealthUiState> = _uiState.asStateFlow()
-    private val guideDao = GymBroDatabase.getInstance(application).exerciseGuideDao()
+    private val db = GymBroDatabase.getInstance(application)
+    private val guideDao = db.exerciseGuideDao()
+    private val planDao = db.cachedWorkoutPlanDao()
 
     init {
-        // Load cached exercise guide images from DB on startup
+        // Load cached workout plan and exercise guide images from DB on startup
         viewModelScope.launch {
+            // Load cached plan
+            val cachedPlan = withContext(Dispatchers.IO) { planDao.get() }
+            if (cachedPlan != null) {
+                val plan = deserializeWorkoutPlan(cachedPlan.planJson)
+                if (plan != null) {
+                    val planWorkouts = plan.days.mapNotNull { it.workout }
+                    _uiState.update { state ->
+                        state.copy(
+                            workoutPlan = plan,
+                            workouts = state.workouts + planWorkouts
+                        )
+                    }
+                    Log.d("HealthViewModel", "Loaded cached workout plan from DB (${plan.days.size} days)")
+                }
+            }
+
+            // Load cached exercise guide images
             val cached = withContext(Dispatchers.IO) { guideDao.getAll() }
             if (cached.isNotEmpty()) {
                 val guides = cached.associate { img ->
@@ -97,6 +117,14 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
                             planError = null,
                             workouts = state.workouts + planWorkouts
                         )
+                    }
+                    // Save plan to DB for persistence
+                    launch {
+                        val json = serializeWorkoutPlan(plan)
+                        withContext(Dispatchers.IO) {
+                            planDao.upsert(CachedWorkoutPlan(planJson = json))
+                        }
+                        Log.d("HealthViewModel", "Saved workout plan to DB")
                     }
                     // Generate exercise guide images for all exercises in the plan
                     val allExerciseNames = plan.days
@@ -478,6 +506,97 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
         }
         Log.e("HealthViewModel", "No image in close-up response for $exerciseName. Body: ${body.take(500)}")
         return Result.failure(Exception("No image in response"))
+    }
+
+    private fun serializeWorkoutPlan(plan: WorkoutPlan): String {
+        val json = JSONObject()
+        json.put("id", plan.id)
+        json.put("generatedAt", plan.generatedAt)
+        json.put("gender", plan.gender)
+        json.put("workoutFrequency", plan.workoutFrequency)
+        json.put("weeklyGoal", plan.weeklyGoal)
+        json.put("difficultyLevel", plan.difficultyLevel.name)
+        val daysArray = JSONArray()
+        for (day in plan.days) {
+            val dayObj = JSONObject()
+            dayObj.put("dayOfWeek", day.dayOfWeek)
+            dayObj.put("isRestDay", day.isRestDay)
+            dayObj.put("focusArea", day.focusArea)
+            if (day.workout != null) {
+                val wObj = JSONObject()
+                wObj.put("id", day.workout.id)
+                wObj.put("name", day.workout.name)
+                wObj.put("category", day.workout.category.name)
+                wObj.put("difficulty", day.workout.difficulty.name)
+                wObj.put("durationMin", day.workout.durationMin)
+                val exArray = JSONArray()
+                for (ex in day.workout.exercises) {
+                    val exObj = JSONObject()
+                    exObj.put("name", ex.name)
+                    if (ex.sets != null) exObj.put("sets", ex.sets)
+                    if (ex.reps != null) exObj.put("reps", ex.reps)
+                    if (ex.durationSec != null) exObj.put("durationSec", ex.durationSec)
+                    exArray.put(exObj)
+                }
+                wObj.put("exercises", exArray)
+                dayObj.put("workout", wObj)
+            }
+            daysArray.put(dayObj)
+        }
+        json.put("days", daysArray)
+        return json.toString()
+    }
+
+    private fun deserializeWorkoutPlan(jsonStr: String): WorkoutPlan? {
+        return try {
+            val json = JSONObject(jsonStr)
+            val daysArray = json.getJSONArray("days")
+            val days = mutableListOf<DayPlan>()
+            for (i in 0 until daysArray.length()) {
+                val dayObj = daysArray.getJSONObject(i)
+                var workout: Workout? = null
+                if (!dayObj.isNull("workout") && dayObj.has("workout")) {
+                    val wObj = dayObj.getJSONObject("workout")
+                    val exercises = mutableListOf<Exercise>()
+                    val exArray = wObj.getJSONArray("exercises")
+                    for (j in 0 until exArray.length()) {
+                        val exObj = exArray.getJSONObject(j)
+                        exercises.add(Exercise(
+                            name = exObj.getString("name"),
+                            sets = if (exObj.has("sets")) exObj.getInt("sets") else null,
+                            reps = if (exObj.has("reps")) exObj.getInt("reps") else null,
+                            durationSec = if (exObj.has("durationSec")) exObj.getInt("durationSec") else null
+                        ))
+                    }
+                    workout = Workout(
+                        id = wObj.getString("id"),
+                        name = wObj.getString("name"),
+                        category = try { WorkoutCategory.valueOf(wObj.getString("category")) } catch (_: Exception) { WorkoutCategory.Strength },
+                        difficulty = try { Difficulty.valueOf(wObj.getString("difficulty")) } catch (_: Exception) { Difficulty.Beginner },
+                        durationMin = wObj.optInt("durationMin", 30),
+                        exercises = exercises
+                    )
+                }
+                days.add(DayPlan(
+                    dayOfWeek = dayObj.getString("dayOfWeek"),
+                    isRestDay = dayObj.optBoolean("isRestDay", false),
+                    focusArea = dayObj.optString("focusArea", ""),
+                    workout = workout
+                ))
+            }
+            WorkoutPlan(
+                id = json.getString("id"),
+                generatedAt = json.getString("generatedAt"),
+                gender = json.getString("gender"),
+                workoutFrequency = json.getString("workoutFrequency"),
+                days = days,
+                weeklyGoal = json.optString("weeklyGoal", ""),
+                difficultyLevel = try { Difficulty.valueOf(json.getString("difficultyLevel")) } catch (_: Exception) { Difficulty.Beginner }
+            )
+        } catch (e: Exception) {
+            Log.e("HealthViewModel", "Failed to deserialize workout plan: ${e.message}")
+            null
+        }
     }
 
     private fun loadBitmapWithExifRotation(path: String): Bitmap? {
