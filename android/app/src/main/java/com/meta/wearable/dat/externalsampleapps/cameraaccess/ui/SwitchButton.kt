@@ -8,15 +8,20 @@
 
 package com.meta.wearable.dat.externalsampleapps.cameraaccess.ui
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 @Composable
 fun SwitchButton(
@@ -26,19 +31,37 @@ fun SwitchButton(
     isDestructive: Boolean = false,
     enabled: Boolean = true,
 ) {
+  val shape = RoundedCornerShape(16.dp)
+  val accentColor = if (isDestructive) AppColor.Error else AppColor.AccentBlue
+  val borderColors = listOf(
+      accentColor.copy(alpha = 0.5f),
+      accentColor.copy(alpha = 0.1f),
+      accentColor.copy(alpha = 0.3f),
+  )
+
   Button(
-      modifier = modifier.height(56.dp).fillMaxWidth(),
-      onClick = onClick,
-      colors =
-          ButtonDefaults.buttonColors(
-              containerColor =
-                  if (isDestructive) AppColor.DestructiveBackground else AppColor.DeepBlue,
-              disabledContainerColor = Color.Gray,
-              disabledContentColor = Color.DarkGray,
-              contentColor = if (isDestructive) AppColor.DestructiveForeground else Color.White,
+      modifier = modifier
+          .height(56.dp)
+          .fillMaxWidth()
+          .border(
+              width = 1.dp,
+              brush = Brush.linearGradient(borderColors),
+              shape = shape,
           ),
+      onClick = onClick,
+      colors = ButtonDefaults.buttonColors(
+          containerColor = Color.White.copy(alpha = 0.08f),
+          disabledContainerColor = Color.White.copy(alpha = 0.04f),
+          disabledContentColor = Color.Gray,
+          contentColor = Color.White,
+      ),
+      shape = shape,
       enabled = enabled,
   ) {
-    Text(label)
+    Text(
+        text = label,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 15.sp,
+    )
   }
 }

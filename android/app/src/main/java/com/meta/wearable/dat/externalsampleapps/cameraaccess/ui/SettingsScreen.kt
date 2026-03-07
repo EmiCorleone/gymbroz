@@ -13,21 +13,27 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.KeyboardType
@@ -69,17 +75,20 @@ fun SettingsScreen(
         webrtcSignalingURL = SettingsManager.webrtcSignalingURL
     }
 
-    Column(modifier = modifier.fillMaxSize()) {
+    Column(modifier = modifier.fillMaxSize().background(AppColor.Background)) {
         TopAppBar(
-            title = { Text("Settings") },
+            title = { Text("Settings", color = AppColor.TextPrimary) },
             navigationIcon = {
                 IconButton(onClick = {
                     save()
                     onBack()
                 }) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = AppColor.TextPrimary)
                 }
             },
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = Color.White.copy(alpha = 0.04f),
+            ),
         )
 
         Column(
@@ -103,9 +112,19 @@ fun SettingsScreen(
             OutlinedTextField(
                 value = systemPrompt,
                 onValueChange = { systemPrompt = it },
-                label = { Text("System prompt") },
+                label = { Text("System prompt", color = AppColor.TextMuted) },
                 modifier = Modifier.fillMaxWidth().height(200.dp),
-                textStyle = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace),
+                textStyle = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace, color = AppColor.TextPrimary),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = AppColor.TextPrimary,
+                    unfocusedTextColor = AppColor.TextPrimary,
+                    cursorColor = AppColor.Accent,
+                    focusedBorderColor = AppColor.Accent,
+                    unfocusedBorderColor = Color.White.copy(alpha = 0.12f),
+                    focusedContainerColor = Color.White.copy(alpha = 0.06f),
+                    unfocusedContainerColor = Color.White.copy(alpha = 0.04f),
+                ),
+                shape = RoundedCornerShape(12.dp),
             )
 
             // OpenClaw section
@@ -181,11 +200,18 @@ fun SettingsScreen(
 
 @Composable
 private fun SectionHeader(title: String) {
-    Text(
-        text = title,
-        style = MaterialTheme.typography.titleSmall,
-        color = MaterialTheme.colorScheme.primary,
-    )
+    Column {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleSmall,
+            color = AppColor.Accent,
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        androidx.compose.foundation.layout.Box(
+            modifier = Modifier.fillMaxWidth().height(1.dp)
+                .background(Brush.horizontalGradient(listOf(AppColor.Accent.copy(alpha = 0.3f), Color.Transparent)))
+        )
+    }
 }
 
 @Composable
@@ -199,11 +225,21 @@ private fun MonoTextField(
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        label = { Text(label) },
-        placeholder = { Text(placeholder) },
+        label = { Text(label, color = AppColor.TextMuted) },
+        placeholder = { Text(placeholder, color = AppColor.TextMuted) },
         modifier = Modifier.fillMaxWidth(),
-        textStyle = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace),
+        textStyle = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace, color = AppColor.TextPrimary),
         singleLine = true,
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedTextColor = AppColor.TextPrimary,
+            unfocusedTextColor = AppColor.TextPrimary,
+            cursorColor = AppColor.Accent,
+            focusedBorderColor = AppColor.Accent,
+            unfocusedBorderColor = Color.White.copy(alpha = 0.12f),
+            focusedContainerColor = Color.White.copy(alpha = 0.06f),
+            unfocusedContainerColor = Color.White.copy(alpha = 0.04f),
+        ),
+        shape = RoundedCornerShape(12.dp),
     )
 }

@@ -160,7 +160,7 @@ function GymToolsComponent({ videoRef }: GymToolsProps) {
 
   // Configure Gemini model with gym-specific system instruction and tools
   useEffect(() => {
-    setModel("models/gemini-2.5-flash-native-audio-latest");
+    setModel("models/gemini-2.0-flash-exp-image-generation");
     setConfig({
       responseModalities: [Modality.AUDIO],
       speechConfig: {

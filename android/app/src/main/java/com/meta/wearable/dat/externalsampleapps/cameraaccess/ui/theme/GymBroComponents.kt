@@ -47,32 +47,42 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.meta.wearable.dat.externalsampleapps.cameraaccess.ui.AppColor
 
-// ═══════════════════════════════════════════════════════════════
-// GLASS CARD — Frosted glass effect with subtle border
-// ═══════════════════════════════════════════════════════════════
+// =====================================================================
+// GLASS CARD -- Frosted glass with gradient border, highlight & glow
+// =====================================================================
 
 @Composable
 fun GlassCard(
     modifier: Modifier = Modifier,
     isSelected: Boolean = false,
+    glowColor: Color = AppColor.Accent,
     onClick: (() -> Unit)? = null,
     content: @Composable () -> Unit
 ) {
-    val bgColor = if (isSelected) AppColor.CardBackground.copy(alpha = 0.95f)
-        else AppColor.CardBackground.copy(alpha = 0.6f)
-    val borderColor = if (isSelected) AppColor.Accent else AppColor.CardBorder
+    val shape = RoundedCornerShape(24.dp)
 
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp))
-            .background(bgColor)
-            .border(1.dp, borderColor, RoundedCornerShape(20.dp))
+            .then(
+                if (isSelected) Modifier.glassGlow(glowColor) else Modifier
+            )
+            .clip(shape)
+            .glassBackground(
+                alpha = if (isSelected) 0.14f else 0.08f,
+                shape = shape,
+            )
+            .glassBorder(
+                shape = shape,
+                isSelected = isSelected,
+                accentColor = glowColor,
+            )
+            .glassHighlight(cornerRadius = 24.dp)
             .then(
                 if (onClick != null) Modifier.clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
-                    onClick = onClick
+                    onClick = onClick,
                 ) else Modifier
             )
             .padding(20.dp)
@@ -81,9 +91,9 @@ fun GlassCard(
     }
 }
 
-// ═══════════════════════════════════════════════════════════════
-// GRADIENT BUTTON — Primary action button with gradient
-// ═══════════════════════════════════════════════════════════════
+// =====================================================================
+// GRADIENT BUTTON -- Primary action with shimmer sweep
+// =====================================================================
 
 @Composable
 fun GradientButton(
@@ -91,12 +101,23 @@ fun GradientButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    colors: List<Color> = listOf(AppColor.Accent, AppColor.AccentDark)
+    colors: List<Color> = listOf(AppColor.Primary, Color(0xFF00BFA5), AppColor.Accent),
 ) {
     val alpha by animateFloatAsState(
         targetValue = if (enabled) 1f else 0.4f,
         animationSpec = tween(300),
-        label = "button_alpha"
+        label = "button_alpha",
+    )
+
+    val transition = rememberInfiniteTransition(label = "btn_shimmer")
+    val shimmerX by transition.animateFloat(
+        initialValue = -0.3f,
+        targetValue = 1.3f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2500, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart,
+        ),
+        label = "btn_shimmer_x",
     )
 
     Button(
@@ -108,10 +129,10 @@ fun GradientButton(
             .alpha(alpha),
         colors = ButtonDefaults.buttonColors(
             containerColor = Color.Transparent,
-            disabledContainerColor = Color.Transparent
+            disabledContainerColor = Color.Transparent,
         ),
         contentPadding = PaddingValues(0.dp),
-        shape = CircleShape
+        shape = CircleShape,
     ) {
         Box(
             modifier = Modifier
@@ -119,24 +140,51 @@ fun GradientButton(
                 .height(58.dp)
                 .background(
                     brush = Brush.horizontalGradient(colors),
-                    shape = CircleShape
-                ),
-            contentAlignment = Alignment.Center
+                    shape = CircleShape,
+                )
+                .border(
+                    width = 1.dp,
+                    brush = Brush.horizontalGradient(
+                        listOf(
+                            Color.White.copy(alpha = 0.2f),
+                            Color.White.copy(alpha = 0.05f),
+                            Color.White.copy(alpha = 0.15f),
+                        )
+                    ),
+                    shape = CircleShape,
+                )
+                .drawBehind {
+                    // Shimmer sweep
+                    val sweepWidth = size.width * 0.35f
+                    val x = size.width * shimmerX
+                    drawRect(
+                        brush = Brush.linearGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                Color.White.copy(alpha = 0.18f),
+                                Color.Transparent,
+                            ),
+                            start = Offset(x - sweepWidth, 0f),
+                            end = Offset(x + sweepWidth, size.height),
+                        ),
+                    )
+                },
+            contentAlignment = Alignment.Center,
         ) {
             Text(
                 text = text,
                 fontSize = 17.sp,
                 fontWeight = FontWeight.Bold,
                 color = AppColor.TextOnAccent,
-                letterSpacing = 0.5.sp
+                letterSpacing = 0.5.sp,
             )
         }
     }
 }
 
-// ═══════════════════════════════════════════════════════════════
-// SELECTION CARD — For onboarding options
-// ═══════════════════════════════════════════════════════════════
+// =====================================================================
+// SELECTION CARD -- For onboarding options with glass treatment
+// =====================================================================
 
 @Composable
 fun SelectionOption(
@@ -147,30 +195,42 @@ fun SelectionOption(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val bgColor = if (isSelected) AppColor.Accent.copy(alpha = 0.12f)
-        else AppColor.CardBackground.copy(alpha = 0.5f)
-    val borderColor = if (isSelected) AppColor.Accent else AppColor.CardBorder
-    val textColor = if (isSelected) AppColor.TextPrimary else AppColor.TextSecondary
+    val shape = RoundedCornerShape(16.dp)
+    val scale by animateFloatAsState(
+        targetValue = if (isSelected) 1.02f else 1f,
+        animationSpec = tween(200),
+        label = "selection_scale",
+    )
 
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(bgColor)
-            .border(1.dp, borderColor, RoundedCornerShape(16.dp))
+            .scale(scale)
+            .then(
+                if (isSelected) Modifier.glassGlow(AppColor.Accent, radiusFraction = 0.5f) else Modifier
+            )
+            .clip(shape)
+            .glassBackground(
+                alpha = if (isSelected) 0.14f else 0.06f,
+                shape = shape,
+            )
+            .glassBorder(
+                shape = shape,
+                isSelected = isSelected,
+            )
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
-                onClick = onClick
+                onClick = onClick,
             )
             .padding(horizontal = 20.dp, vertical = 18.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         if (emoji != null) {
             Text(
                 text = emoji,
                 fontSize = 28.sp,
-                modifier = Modifier.padding(end = 16.dp)
+                modifier = Modifier.padding(end = 16.dp),
             )
         }
         Column(modifier = Modifier.weight(1f)) {
@@ -178,36 +238,55 @@ fun SelectionOption(
                 text = title,
                 fontSize = 17.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = textColor
+                color = if (isSelected) AppColor.TextPrimary else AppColor.TextSecondary,
             )
             if (subtitle != null) {
                 Text(
                     text = subtitle,
                     fontSize = 13.sp,
                     color = AppColor.TextMuted,
-                    modifier = Modifier.padding(top = 2.dp)
+                    modifier = Modifier.padding(top = 2.dp),
                 )
             }
         }
-        // Selection indicator
+        // Selection indicator — glass circle
         Box(
             modifier = Modifier
                 .size(24.dp)
                 .clip(CircleShape)
-                .background(if (isSelected) AppColor.Accent else Color.Transparent)
-                .border(2.dp, if (isSelected) AppColor.Accent else AppColor.TextMuted, CircleShape),
-            contentAlignment = Alignment.Center
+                .background(
+                    if (isSelected) {
+                        Brush.radialGradient(
+                            listOf(AppColor.Accent, AppColor.AccentDark),
+                        )
+                    } else {
+                        Brush.radialGradient(
+                            listOf(Color.Transparent, Color.Transparent),
+                        )
+                    }
+                )
+                .border(
+                    2.dp,
+                    if (isSelected) AppColor.Accent else AppColor.TextMuted.copy(alpha = 0.4f),
+                    CircleShape,
+                ),
+            contentAlignment = Alignment.Center,
         ) {
             if (isSelected) {
-                Text("✓", fontSize = 14.sp, color = AppColor.TextOnAccent, fontWeight = FontWeight.Bold)
+                Text(
+                    text = "\u2713",
+                    fontSize = 14.sp,
+                    color = AppColor.TextOnAccent,
+                    fontWeight = FontWeight.Bold,
+                )
             }
         }
     }
 }
 
-// ═══════════════════════════════════════════════════════════════
-// PULSE INDICATOR — Animated pulsing dot
-// ═══════════════════════════════════════════════════════════════
+// =====================================================================
+// PULSE INDICATOR -- Animated pulsing dot with glow halo
+// =====================================================================
 
 @Composable
 fun PulseIndicator(
@@ -221,21 +300,33 @@ fun PulseIndicator(
         targetValue = 1.4f,
         animationSpec = infiniteRepeatable(
             animation = tween(800, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
+            repeatMode = RepeatMode.Reverse,
         ),
-        label = "pulse_scale"
+        label = "pulse_scale",
     )
     val alpha by infiniteTransition.animateFloat(
         initialValue = 1f,
         targetValue = 0.3f,
         animationSpec = infiniteRepeatable(
             animation = tween(800, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
+            repeatMode = RepeatMode.Reverse,
         ),
-        label = "pulse_alpha"
+        label = "pulse_alpha",
     )
 
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
+        // Glow halo
+        Box(
+            modifier = Modifier
+                .size(size * 2.5f)
+                .drawBehind {
+                    drawCircle(
+                        brush = Brush.radialGradient(
+                            colors = listOf(color.copy(alpha = 0.2f), Color.Transparent),
+                        ),
+                    )
+                }
+        )
         // Outer pulse ring
         Box(
             modifier = Modifier
@@ -243,21 +334,21 @@ fun PulseIndicator(
                 .scale(scale)
                 .alpha(alpha)
                 .clip(CircleShape)
-                .background(color.copy(alpha = 0.3f))
+                .background(color.copy(alpha = 0.3f)),
         )
         // Inner solid dot
         Box(
             modifier = Modifier
                 .size(size)
                 .clip(CircleShape)
-                .background(color)
+                .background(color),
         )
     }
 }
 
-// ═══════════════════════════════════════════════════════════════
-// STAT CARD — For dashboard metrics
-// ═══════════════════════════════════════════════════════════════
+// =====================================================================
+// STAT CARD -- For dashboard metrics (wraps GlassCard)
+// =====================================================================
 
 @Composable
 fun StatCard(
@@ -266,17 +357,17 @@ fun StatCard(
     modifier: Modifier = Modifier,
     accentColor: Color = AppColor.Accent,
 ) {
-    GlassCard(modifier = modifier) {
+    GlassCard(modifier = modifier, glowColor = accentColor) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         ) {
             Text(
                 text = value,
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Black,
-                color = accentColor
+                color = accentColor,
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
@@ -285,15 +376,15 @@ fun StatCard(
                 fontWeight = FontWeight.Medium,
                 color = AppColor.TextMuted,
                 textAlign = TextAlign.Center,
-                letterSpacing = 1.sp
+                letterSpacing = 1.sp,
             )
         }
     }
 }
 
-// ═══════════════════════════════════════════════════════════════
-// SECTION HEADER — For labeled sections
-// ═══════════════════════════════════════════════════════════════
+// =====================================================================
+// SECTION HEADER -- For labeled sections with gradient underline
+// =====================================================================
 
 @Composable
 fun SectionHeader(
@@ -302,27 +393,43 @@ fun SectionHeader(
     action: String? = null,
     onAction: (() -> Unit)? = null
 ) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = title,
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            color = AppColor.TextPrimary
-        )
-        if (action != null && onAction != null) {
+    Column(modifier = modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             Text(
-                text = action,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = AppColor.Accent,
-                modifier = Modifier.clickable { onAction() }
+                text = title,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = AppColor.TextPrimary,
             )
+            if (action != null && onAction != null) {
+                Text(
+                    text = action,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = AppColor.Accent,
+                    modifier = Modifier.clickable { onAction() },
+                )
+            }
         }
+        // Gradient underline
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(
+                    Brush.horizontalGradient(
+                        listOf(
+                            AppColor.Accent.copy(alpha = 0.4f),
+                            Color.Transparent,
+                        )
+                    )
+                )
+        )
     }
 }

@@ -1,4 +1,4 @@
-# AI Gym Assistant
+# Gym Bro
 
 A real-time AI-powered gym coach built on **Gemini Live API**. Designed for AI glasses, it sees through your camera, counts your reps with computer vision, generates workout music on the fly, and shows you proper exercise form on any machine.
 

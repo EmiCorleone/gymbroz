@@ -35,6 +35,23 @@ object AppColor {
     val Warning = Color(0xFFFFAB00)
     val Error = Color(0xFFFF5252)
 
+    // ── Glass System ──
+    val GlassWhite = Color(0x1AFFFFFF)           // 10% white - base glass fill
+    val GlassWhiteMedium = Color(0x33FFFFFF)     // 20% white - elevated glass
+    val GlassWhiteHigh = Color(0x4DFFFFFF)       // 30% white - hover/pressed glass
+    val GlassBorderLight = Color(0x33FFFFFF)     // 20% white border
+    val GlassBorderAccent = Color(0x4D00E676)    // 30% green border (selected)
+
+    // ── Glass Shimmer (border gradient) ──
+    val ShimmerStart = Color(0x4DFFFFFF)         // 30% white
+    val ShimmerMid = Color(0x0DFFFFFF)           // 5% white
+    val ShimmerEnd = Color(0x33FFFFFF)           // 20% white
+
+    // ── Ambient Glow (animated background orbs) ──
+    val AmbientPurple = Color(0x1A6C63FF)        // 10% purple
+    val AmbientGreen = Color(0x1A00E676)         // 10% green
+    val AmbientBlue = Color(0x1A00B4D8)          // 10% blue
+
     // ── Legacy (keeping for existing screens) ──
     val Green = Color(0xFF61BC63)
     val Red = Color(0xFFFF3B30)

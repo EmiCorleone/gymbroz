@@ -1,7 +1,5 @@
 package com.meta.wearable.dat.externalsampleapps.cameraaccess.ui.dashboard
 
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -20,6 +18,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -35,9 +34,11 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.meta.wearable.dat.externalsampleapps.cameraaccess.ui.AppColor
+import com.meta.wearable.dat.externalsampleapps.cameraaccess.ui.theme.AnimatedMeshGradientBackground
 import com.meta.wearable.dat.externalsampleapps.cameraaccess.ui.theme.GlassCard
 import com.meta.wearable.dat.externalsampleapps.cameraaccess.ui.theme.GradientButton
 import com.meta.wearable.dat.externalsampleapps.cameraaccess.ui.theme.SectionHeader
+import com.meta.wearable.dat.externalsampleapps.cameraaccess.ui.theme.glassBorder
 import java.time.LocalDate
 import java.time.format.TextStyle
 import java.util.Locale
@@ -53,127 +54,144 @@ fun DashboardScreen(
 
     LaunchedEffect(Unit) { dashboardViewModel.loadDashboardData() }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(AppColor.Background)
-            .verticalScroll(scrollState)
-            .statusBarsPadding()
-            .padding(horizontal = 20.dp)
-    ) {
-        Spacer(modifier = Modifier.height(16.dp))
+    Box(modifier = Modifier.fillMaxSize()) {
+        // Animated gradient background
+        AnimatedMeshGradientBackground()
 
-        // ---- GREETING ----
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(scrollState)
+                .statusBarsPadding()
+                .padding(horizontal = 20.dp)
         ) {
-            Column {
-                Text(
-                    text = "What's up${if (state.profile?.name?.isNotBlank() == true) ", ${state.profile?.name}" else ""}!",
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.Black,
-                    color = AppColor.TextPrimary
-                )
-                Text(
-                    text = LocalDate.now().let { "${it.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.getDefault())}, ${it.month.getDisplayName(TextStyle.SHORT, Locale.getDefault())} ${it.dayOfMonth}" },
-                    fontSize = 14.sp,
-                    color = AppColor.TextMuted,
-                    modifier = Modifier.padding(top = 4.dp)
-                )
-            }
-            // Profile avatar
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(CircleShape)
-                    .background(AppColor.CardBackground)
-                    .border(2.dp, AppColor.Accent.copy(alpha = 0.4f), CircleShape)
-                    .clickable { onOpenProfile() },
-                contentAlignment = Alignment.Center
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // ---- GREETING ----
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = state.profile?.name?.firstOrNull()?.uppercase() ?: "\uD83D\uDCAA",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = AppColor.Accent
+                Column {
+                    Text(
+                        text = "What's up${if (state.profile?.name?.isNotBlank() == true) ", ${state.profile?.name}" else ""}!",
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.Black,
+                        color = AppColor.TextPrimary
+                    )
+                    Text(
+                        text = LocalDate.now().let { "${it.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.getDefault())}, ${it.month.getDisplayName(TextStyle.SHORT, Locale.getDefault())} ${it.dayOfMonth}" },
+                        fontSize = 14.sp,
+                        color = AppColor.TextMuted,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
+                // Profile avatar — glass border with gradient shimmer
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .drawBehind {
+                            drawCircle(
+                                brush = Brush.radialGradient(
+                                    listOf(AppColor.Accent.copy(alpha = 0.2f), Color.Transparent),
+                                ),
+                                radius = size.maxDimension * 0.8f,
+                            )
+                        }
+                        .clip(CircleShape)
+                        .background(Color.White.copy(alpha = 0.08f))
+                        .border(
+                            2.dp,
+                            Brush.linearGradient(
+                                listOf(AppColor.Accent.copy(alpha = 0.6f), AppColor.Primary.copy(alpha = 0.3f))
+                            ),
+                            CircleShape
+                        )
+                        .clickable { onOpenProfile() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = state.profile?.name?.firstOrNull()?.uppercase() ?: "\uD83D\uDCAA",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = AppColor.Accent
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // ---- STAT CARDS with individual glows ----
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                MiniStatCard(
+                    value = state.totalWorkouts.toString(),
+                    label = "WORKOUTS",
+                    icon = Icons.Default.FitnessCenter,
+                    accentColor = AppColor.Accent,
+                    modifier = Modifier.weight(1f)
+                )
+                MiniStatCard(
+                    value = state.totalReps.toString(),
+                    label = "TOTAL REPS",
+                    icon = Icons.Default.TrendingUp,
+                    accentColor = AppColor.Primary,
+                    modifier = Modifier.weight(1f)
+                )
+                MiniStatCard(
+                    value = "${state.currentStreak}",
+                    label = "DAY STREAK",
+                    icon = Icons.Default.Timer,
+                    accentColor = AppColor.AccentOrange,
+                    modifier = Modifier.weight(1f)
                 )
             }
-        }
 
-        Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-        // ---- STAT CARDS ----
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            MiniStatCard(
-                value = state.totalWorkouts.toString(),
-                label = "WORKOUTS",
-                icon = Icons.Default.FitnessCenter,
-                accentColor = AppColor.Accent,
-                modifier = Modifier.weight(1f)
-            )
-            MiniStatCard(
-                value = state.totalReps.toString(),
-                label = "TOTAL REPS",
-                icon = Icons.Default.TrendingUp,
-                accentColor = AppColor.Primary,
-                modifier = Modifier.weight(1f)
-            )
-            MiniStatCard(
-                value = "${state.currentStreak}",
-                label = "DAY STREAK",
-                icon = Icons.Default.Timer,
-                accentColor = AppColor.AccentOrange,
-                modifier = Modifier.weight(1f)
-            )
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // ---- WEEKLY ACTIVITY ----
-        SectionHeader("This Week")
-        Spacer(modifier = Modifier.height(8.dp))
-        WeeklyActivityRow(activeDays = state.weekActiveDays)
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // ---- START WORKOUT BUTTON ----
-        GradientButton(
-            text = "Start Workout \uD83C\uDFCB\uFE0F",
-            onClick = onStartWorkout
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // ---- RECENT WORKOUTS ----
-        if (state.recentSessions.isNotEmpty()) {
-            SectionHeader("Recent Workouts", action = "See All", onAction = { /* TODO */ })
+            // ---- WEEKLY ACTIVITY ----
+            SectionHeader("This Week")
             Spacer(modifier = Modifier.height(8.dp))
-            state.recentSessions.forEach { session ->
-                RecentWorkoutCard(session)
+            WeeklyActivityRow(activeDays = state.weekActiveDays)
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // ---- START WORKOUT BUTTON ----
+            GradientButton(
+                text = "Start Workout \uD83C\uDFCB\uFE0F",
+                onClick = onStartWorkout
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // ---- RECENT WORKOUTS ----
+            if (state.recentSessions.isNotEmpty()) {
+                SectionHeader("Recent Workouts", action = "See All", onAction = { /* TODO */ })
                 Spacer(modifier = Modifier.height(8.dp))
+                state.recentSessions.forEach { session ->
+                    RecentWorkoutCard(session)
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+            } else {
+                EmptyWorkoutState()
             }
-        } else {
-            // Empty state
-            EmptyWorkoutState()
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // ---- PROGRESS CHART ----
+            SectionHeader("Progress")
+            Spacer(modifier = Modifier.height(8.dp))
+            ProgressChartCard(totalWorkouts = state.totalWorkouts)
+
+            Spacer(modifier = Modifier.height(100.dp))
         }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // ---- PROGRESS CHART ----
-        SectionHeader("Progress")
-        Spacer(modifier = Modifier.height(8.dp))
-        ProgressChartCard(totalWorkouts = state.totalWorkouts)
-
-        Spacer(modifier = Modifier.height(100.dp)) // Bottom padding for nav bar
     }
 }
 
-// ---- MINI STAT CARD ----
+// ---- MINI STAT CARD with individual glow ----
 
 @Composable
 private fun MiniStatCard(
@@ -183,7 +201,7 @@ private fun MiniStatCard(
     accentColor: Color,
     modifier: Modifier = Modifier
 ) {
-    GlassCard(modifier = modifier) {
+    GlassCard(modifier = modifier, glowColor = accentColor) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
@@ -246,14 +264,35 @@ private fun WeeklyActivityRow(activeDays: List<String>) {
                     Box(
                         modifier = Modifier
                             .size(32.dp)
+                            .then(
+                                if (isActive) Modifier.drawBehind {
+                                    drawCircle(
+                                        brush = Brush.radialGradient(
+                                            listOf(AppColor.Accent.copy(alpha = 0.25f), Color.Transparent),
+                                        ),
+                                        radius = size.maxDimension * 0.9f,
+                                    )
+                                } else Modifier
+                            )
                             .clip(CircleShape)
                             .background(
                                 if (isActive) AppColor.Accent
-                                else if (isToday) AppColor.Accent.copy(alpha = 0.15f)
-                                else AppColor.CardBorder.copy(alpha = 0.3f)
+                                else if (isToday) AppColor.Accent.copy(alpha = 0.12f)
+                                else Color.White.copy(alpha = 0.06f)
                             )
                             .then(
-                                if (isToday && !isActive) Modifier.border(1.dp, AppColor.Accent.copy(alpha = 0.5f), CircleShape)
+                                if (isToday && !isActive) Modifier.border(
+                                    1.dp,
+                                    Brush.linearGradient(
+                                        listOf(AppColor.Accent.copy(alpha = 0.5f), AppColor.Accent.copy(alpha = 0.15f))
+                                    ),
+                                    CircleShape
+                                )
+                                else if (!isActive) Modifier.border(
+                                    1.dp,
+                                    Color.White.copy(alpha = 0.08f),
+                                    CircleShape
+                                )
                                 else Modifier
                             ),
                         contentAlignment = Alignment.Center
@@ -292,7 +331,8 @@ private fun RecentWorkoutCard(session: com.meta.wearable.dat.externalsampleapps.
                     modifier = Modifier
                         .size(44.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(AppColor.Accent.copy(alpha = 0.12f)),
+                        .background(AppColor.Accent.copy(alpha = 0.12f))
+                        .glassBorder(RoundedCornerShape(12.dp), isSelected = true),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -304,26 +344,12 @@ private fun RecentWorkoutCard(session: com.meta.wearable.dat.externalsampleapps.
                 }
                 Spacer(modifier = Modifier.width(14.dp))
                 Column {
-                    Text(
-                        "Workout",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = AppColor.TextPrimary
-                    )
-                    Text(
-                        "$timeAgo \u2022 ${session.durationMinutes}min",
-                        fontSize = 13.sp,
-                        color = AppColor.TextMuted
-                    )
+                    Text("Workout", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = AppColor.TextPrimary)
+                    Text("$timeAgo \u2022 ${session.durationMinutes}min", fontSize = 13.sp, color = AppColor.TextMuted)
                 }
             }
             Column(horizontalAlignment = Alignment.End) {
-                Text(
-                    "${session.totalReps}",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = AppColor.Accent
-                )
+                Text("${session.totalReps}", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = AppColor.Accent)
                 Text("reps", fontSize = 11.sp, color = AppColor.TextMuted)
             }
         }
@@ -341,19 +367,11 @@ private fun EmptyWorkoutState() {
         ) {
             Text("\uD83C\uDFCB\uFE0F", fontSize = 48.sp)
             Spacer(modifier = Modifier.height(12.dp))
-            Text(
-                "No workouts yet",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = AppColor.TextPrimary
-            )
+            Text("No workouts yet", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = AppColor.TextPrimary)
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 "Start your first workout and your\nstats will appear here",
-                fontSize = 14.sp,
-                color = AppColor.TextMuted,
-                textAlign = TextAlign.Center,
-                lineHeight = 20.sp
+                fontSize = 14.sp, color = AppColor.TextMuted, textAlign = TextAlign.Center, lineHeight = 20.sp
             )
         }
     }
@@ -373,9 +391,7 @@ private fun ProgressChartCard(totalWorkouts: Int) {
                 Text("Total Activity", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = AppColor.TextPrimary)
                 Text(
                     "$totalWorkouts workouts",
-                    fontSize = 13.sp,
-                    color = AppColor.Accent,
-                    fontWeight = FontWeight.SemiBold
+                    fontSize = 13.sp, color = AppColor.Accent, fontWeight = FontWeight.SemiBold
                 )
             }
             Spacer(modifier = Modifier.height(16.dp))
@@ -390,22 +406,35 @@ private fun DashboardChartCanvas() {
         val width = size.width
         val height = size.height
 
-        // Grid lines
+        // Grid lines — glass-style
         for (y in listOf(0.33f, 0.66f)) {
             drawLine(
-                Color(0xFF2A2A3A),
+                Color.White.copy(alpha = 0.06f),
                 Offset(0f, height * y),
                 Offset(width, height * y),
                 strokeWidth = 1f
             )
         }
 
-        // Placeholder progress line (shows upward trend)
         val path = Path().apply {
             moveTo(0f, height * 0.8f)
             cubicTo(width * 0.2f, height * 0.6f, width * 0.4f, height * 0.7f, width * 0.5f, height * 0.4f)
             cubicTo(width * 0.6f, height * 0.3f, width * 0.8f, height * 0.35f, width, height * 0.15f)
         }
+
+        // Glass fill under line
+        val fillPath = Path().apply {
+            addPath(path)
+            lineTo(width, height)
+            lineTo(0f, height)
+            close()
+        }
+        drawPath(
+            fillPath,
+            Brush.verticalGradient(
+                listOf(Color(0xFF00E676).copy(alpha = 0.12f), Color.Transparent),
+            ),
+        )
 
         // Glow
         drawPath(
@@ -420,8 +449,9 @@ private fun DashboardChartCanvas() {
             style = Stroke(width = 4f, cap = StrokeCap.Round, join = StrokeJoin.Round)
         )
 
-        // End dot
+        // End dot with glow
+        drawCircle(Color(0xFF00E676).copy(alpha = 0.3f), radius = 12f, center = Offset(width, height * 0.15f))
         drawCircle(Color(0xFF00E676), radius = 6f, center = Offset(width, height * 0.15f))
-        drawCircle(Color(0xFF0A0A0A), radius = 3f, center = Offset(width, height * 0.15f))
+        drawCircle(AppColor.Background, radius = 3f, center = Offset(width, height * 0.15f))
     }
 }

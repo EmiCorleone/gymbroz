@@ -5,6 +5,7 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,6 +25,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
@@ -88,9 +90,16 @@ fun RoomCodePill(
     val scope = rememberCoroutineScope()
     var showCopied by remember { mutableStateOf(false) }
 
+    val glassBorderColors = listOf(
+        Color.White.copy(alpha = 0.2f),
+        Color.White.copy(alpha = 0.05f),
+        Color.White.copy(alpha = 0.12f),
+    )
+
     Row(
         modifier = modifier
-            .background(Color.Black.copy(alpha = 0.6f), RoundedCornerShape(12.dp))
+            .background(Color.White.copy(alpha = 0.08f), RoundedCornerShape(12.dp))
+            .border(1.dp, Brush.linearGradient(glassBorderColors), RoundedCornerShape(12.dp))
             .clickable {
                 val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                 clipboard.setPrimaryClip(ClipData.newPlainText("Room Code", code))

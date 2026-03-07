@@ -10,6 +10,7 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -36,6 +37,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
@@ -55,38 +58,25 @@ fun GeminiOverlay(
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier.fillMaxSize()) {
-        // Top overlay: status + transcripts + tool status
         Column(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).align(Alignment.TopStart),
         ) {
-            // Status bar
             GeminiStatusBar(connectionState = uiState.connectionState)
-
             Spacer(modifier = Modifier.height(8.dp))
-
-            // Transcripts
             if (uiState.userTranscript.isNotEmpty() || uiState.aiTranscript.isNotEmpty()) {
-                TranscriptView(
-                    userTranscript = uiState.userTranscript,
-                    aiTranscript = uiState.aiTranscript,
-                )
+                TranscriptView(userTranscript = uiState.userTranscript, aiTranscript = uiState.aiTranscript)
             }
-
-            // Tool call status
             val toolStatus = uiState.toolCallStatus
             if (toolStatus !is ToolCallStatus.Idle) {
                 Spacer(modifier = Modifier.height(4.dp))
                 ToolCallStatusView(status = toolStatus)
             }
-
-            // Speaking indicator
             if (uiState.isModelSpeaking) {
                 Spacer(modifier = Modifier.height(4.dp))
                 SpeakingIndicator()
             }
         }
 
-        // Rep counter (bottom-left)
         if (uiState.repCounter.active) {
             RepCounterOverlay(
                 exercise = uiState.repCounter.exercise,
@@ -95,7 +85,6 @@ fun GeminiOverlay(
             )
         }
 
-        // Music indicator (bottom-right)
         if (uiState.music.active) {
             MusicOverlay(
                 prompt = uiState.music.prompt,
@@ -104,7 +93,6 @@ fun GeminiOverlay(
             )
         }
 
-        // Exercise guide (fullscreen overlay on top of everything)
         val guide = uiState.exerciseGuide
         if (guide.isGenerating || guide.imageBase64 != null || guide.error != null) {
             ExerciseGuideOverlay(
@@ -118,15 +106,22 @@ fun GeminiOverlay(
     }
 }
 
+// -- Glass pill helpers --
+
+private val glassShape = RoundedCornerShape(12.dp)
+private val glassBg = Color.White.copy(alpha = 0.08f)
+private val glassBorderColors = listOf(
+    Color.White.copy(alpha = 0.2f),
+    Color.White.copy(alpha = 0.05f),
+    Color.White.copy(alpha = 0.12f),
+)
+
 @Composable
 fun GeminiStatusBar(
     connectionState: GeminiConnectionState,
     modifier: Modifier = Modifier,
 ) {
-    Row(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
+    Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         StatusPill(
             label = "AI",
             color = when (connectionState) {
@@ -148,22 +143,33 @@ fun StatusPill(
 ) {
     Row(
         modifier = modifier
-            .background(Color.Black.copy(alpha = 0.6f), RoundedCornerShape(12.dp))
+            .background(glassBg, glassShape)
+            .border(1.dp, Brush.linearGradient(glassBorderColors), glassShape)
             .padding(horizontal = 10.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        Box(
-            modifier = Modifier
-                .size(8.dp)
-                .clip(CircleShape)
-                .background(color),
-        )
-        Text(
-            text = label,
-            color = Color.White,
-            fontSize = 12.sp,
-        )
+        // Status dot with glow halo
+        Box(contentAlignment = Alignment.Center) {
+            Box(
+                modifier = Modifier
+                    .size(16.dp)
+                    .drawBehind {
+                        drawCircle(
+                            brush = Brush.radialGradient(
+                                listOf(color.copy(alpha = 0.4f), Color.Transparent),
+                            ),
+                        )
+                    }
+            )
+            Box(
+                modifier = Modifier
+                    .size(8.dp)
+                    .clip(CircleShape)
+                    .background(color),
+            )
+        }
+        Text(text = label, color = Color.White, fontSize = 12.sp)
     }
 }
 
@@ -173,28 +179,40 @@ fun TranscriptView(
     aiTranscript: String,
     modifier: Modifier = Modifier,
 ) {
-    Column(
+    Row(
         modifier = modifier
-            .background(Color.Black.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
-            .padding(horizontal = 12.dp, vertical = 8.dp),
+            .background(glassBg, RoundedCornerShape(8.dp))
+            .border(1.dp, Brush.linearGradient(glassBorderColors), RoundedCornerShape(8.dp)),
     ) {
-        if (userTranscript.isNotEmpty()) {
-            Text(
-                text = userTranscript,
-                color = Color.White.copy(alpha = 0.6f),
-                fontSize = 13.sp,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
-        if (aiTranscript.isNotEmpty()) {
-            Text(
-                text = aiTranscript,
-                color = Color.White,
-                fontSize = 13.sp,
-                maxLines = 3,
-                overflow = TextOverflow.Ellipsis,
-            )
+        // Accent left border strip
+        Box(
+            modifier = Modifier
+                .width(3.dp)
+                .height(if (userTranscript.isNotEmpty() && aiTranscript.isNotEmpty()) 60.dp else 36.dp)
+                .background(
+                    Brush.verticalGradient(listOf(AppColor.Accent, AppColor.Accent.copy(alpha = 0.2f))),
+                    RoundedCornerShape(topStart = 8.dp, bottomStart = 8.dp),
+                )
+        )
+        Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
+            if (userTranscript.isNotEmpty()) {
+                Text(
+                    text = userTranscript,
+                    color = Color.White.copy(alpha = 0.6f),
+                    fontSize = 13.sp,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            if (aiTranscript.isNotEmpty()) {
+                Text(
+                    text = aiTranscript,
+                    color = Color.White,
+                    fontSize = 13.sp,
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
         }
     }
 }
@@ -206,7 +224,8 @@ fun ToolCallStatusView(
 ) {
     Row(
         modifier = modifier
-            .background(Color.Black.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
+            .background(glassBg, RoundedCornerShape(8.dp))
+            .border(1.dp, Brush.linearGradient(glassBorderColors), RoundedCornerShape(8.dp))
             .padding(horizontal = 12.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -215,15 +234,15 @@ fun ToolCallStatusView(
             is ToolCallStatus.Executing -> {
                 CircularProgressIndicator(
                     modifier = Modifier.size(14.dp),
-                    color = Color.White,
+                    color = AppColor.Accent,
                     strokeWidth = 2.dp,
                 )
             }
             is ToolCallStatus.Completed -> {
-                Text(text = "✓", color = Color(0xFF4CAF50), fontSize = 12.sp, fontFamily = FontFamily.Monospace)
+                Text(text = "\u2713", color = Color(0xFF4CAF50), fontSize = 12.sp, fontFamily = FontFamily.Monospace)
             }
             is ToolCallStatus.Failed -> {
-                Text(text = "✗", color = Color(0xFFF44336), fontSize = 12.sp, fontFamily = FontFamily.Monospace)
+                Text(text = "\u2717", color = Color(0xFFF44336), fontSize = 12.sp, fontFamily = FontFamily.Monospace)
             }
             else -> {}
         }
@@ -243,15 +262,34 @@ fun RepCounterOverlay(
     reps: Int,
     modifier: Modifier = Modifier,
 ) {
+    val shape = RoundedCornerShape(16.dp)
+    val accentGreen = AppColor.Accent
+
     Column(
         modifier = modifier
-            .background(Color(0xFF1B5E20).copy(alpha = 0.85f), RoundedCornerShape(16.dp))
+            .drawBehind {
+                drawRoundRect(
+                    brush = Brush.radialGradient(
+                        listOf(accentGreen.copy(alpha = 0.15f), Color.Transparent),
+                        radius = size.maxDimension * 0.8f,
+                    ),
+                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(16.dp.toPx()),
+                )
+            }
+            .background(glassBg, shape)
+            .border(
+                1.dp,
+                Brush.linearGradient(
+                    listOf(accentGreen.copy(alpha = 0.4f), accentGreen.copy(alpha = 0.08f), accentGreen.copy(alpha = 0.25f))
+                ),
+                shape,
+            )
             .padding(horizontal = 20.dp, vertical = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
             text = exercise.replace("_", " ").uppercase(),
-            color = Color.White.copy(alpha = 0.7f),
+            color = accentGreen.copy(alpha = 0.8f),
             fontSize = 10.sp,
             fontWeight = FontWeight.Bold,
         )
@@ -262,11 +300,7 @@ fun RepCounterOverlay(
             fontWeight = FontWeight.Bold,
             fontFamily = FontFamily.Monospace,
         )
-        Text(
-            text = "REPS",
-            color = Color.White.copy(alpha = 0.7f),
-            fontSize = 11.sp,
-        )
+        Text(text = "REPS", color = accentGreen.copy(alpha = 0.7f), fontSize = 11.sp)
     }
 }
 
@@ -276,14 +310,33 @@ fun MusicOverlay(
     bpm: Int,
     modifier: Modifier = Modifier,
 ) {
+    val shape = RoundedCornerShape(12.dp)
+    val accentPurple = AppColor.Primary
+
     Row(
         modifier = modifier
-            .background(Color(0xFF4A148C).copy(alpha = 0.85f), RoundedCornerShape(12.dp))
+            .drawBehind {
+                drawRoundRect(
+                    brush = Brush.radialGradient(
+                        listOf(accentPurple.copy(alpha = 0.15f), Color.Transparent),
+                        radius = size.maxDimension * 0.8f,
+                    ),
+                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(12.dp.toPx()),
+                )
+            }
+            .background(glassBg, shape)
+            .border(
+                1.dp,
+                Brush.linearGradient(
+                    listOf(accentPurple.copy(alpha = 0.4f), accentPurple.copy(alpha = 0.08f), accentPurple.copy(alpha = 0.25f))
+                ),
+                shape,
+            )
             .padding(horizontal = 14.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Text(text = "♪", color = Color.White, fontSize = 18.sp)
+        Text(text = "\u266A", color = accentPurple, fontSize = 18.sp)
         Column {
             Text(
                 text = prompt,
@@ -293,11 +346,7 @@ fun MusicOverlay(
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.width(120.dp),
             )
-            Text(
-                text = "$bpm BPM",
-                color = Color.White.copy(alpha = 0.6f),
-                fontSize = 10.sp,
-            )
+            Text(text = "$bpm BPM", color = Color.White.copy(alpha = 0.6f), fontSize = 10.sp)
         }
     }
 }
@@ -311,16 +360,15 @@ fun ExerciseGuideOverlay(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    // Fullscreen dark backdrop
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.4f))
+            .background(Color.Black.copy(alpha = 0.5f))
             .clickable(enabled = !isGenerating) { onDismiss() },
     ) {
         if (isGenerating) {
             CircularProgressIndicator(
-                color = Color.White,
+                color = AppColor.Accent,
                 modifier = Modifier.align(Alignment.Center).size(48.dp),
                 strokeWidth = 4.dp,
             )
@@ -337,15 +385,19 @@ fun ExerciseGuideOverlay(
                     contentScale = ContentScale.Fit,
                 )
             }
-
-            // Close button
+            // Glass close button
             IconButton(
                 onClick = onDismiss,
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .padding(16.dp)
                     .size(44.dp)
-                    .background(Color.Black.copy(alpha = 0.6f), CircleShape),
+                    .background(glassBg, CircleShape)
+                    .border(
+                        1.dp,
+                        Brush.linearGradient(glassBorderColors),
+                        CircleShape,
+                    ),
             ) {
                 Icon(Icons.Default.Close, contentDescription = "Close", tint = Color.White, modifier = Modifier.size(24.dp))
             }
@@ -365,7 +417,8 @@ fun SpeakingIndicator(modifier: Modifier = Modifier) {
     val infiniteTransition = rememberInfiniteTransition(label = "speaking")
     Row(
         modifier = modifier
-            .background(Color.Black.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
+            .background(glassBg, RoundedCornerShape(8.dp))
+            .border(1.dp, Brush.linearGradient(glassBorderColors), RoundedCornerShape(8.dp))
             .padding(horizontal = 12.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(3.dp),
@@ -385,7 +438,11 @@ fun SpeakingIndicator(modifier: Modifier = Modifier) {
                     .width(3.dp)
                     .height(height.dp)
                     .clip(RoundedCornerShape(1.5.dp))
-                    .background(Color.White),
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(AppColor.Accent, AppColor.Primary),
+                        )
+                    ),
             )
         }
         Spacer(modifier = Modifier.width(6.dp))

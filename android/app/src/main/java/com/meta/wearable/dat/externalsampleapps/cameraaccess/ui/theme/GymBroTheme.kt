@@ -1,14 +1,28 @@
 package com.meta.wearable.dat.externalsampleapps.cameraaccess.ui.theme
 
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.Typography
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.meta.wearable.dat.externalsampleapps.cameraaccess.ui.AppColor
+
+data class GlassStyle(
+    val blurRadius: Dp = 20.dp,
+    val backgroundAlpha: Float = 0.10f,
+    val borderWidth: Dp = 1.dp,
+    val borderAlpha: Float = 0.20f,
+    val cornerRadius: Dp = 24.dp,
+    val highlightAlpha: Float = 0.12f,
+)
+
+val LocalGlassStyle = staticCompositionLocalOf { GlassStyle() }
 
 private val GymBroColorScheme = darkColorScheme(
     primary = AppColor.Accent,
@@ -98,11 +112,14 @@ val GymBroTypography = Typography(
 
 @Composable
 fun GymBroTheme(
+    glassStyle: GlassStyle = GlassStyle(),
     content: @Composable () -> Unit
 ) {
-    MaterialTheme(
-        colorScheme = GymBroColorScheme,
-        typography = GymBroTypography,
-        content = content
-    )
+    CompositionLocalProvider(LocalGlassStyle provides glassStyle) {
+        MaterialTheme(
+            colorScheme = GymBroColorScheme,
+            typography = GymBroTypography,
+            content = content
+        )
+    }
 }

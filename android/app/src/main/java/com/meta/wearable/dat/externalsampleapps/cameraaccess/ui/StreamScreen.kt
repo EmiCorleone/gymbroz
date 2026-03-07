@@ -68,8 +68,12 @@ fun StreamScreen(
     LaunchedEffect(geminiViewModel) {
         streamViewModel.geminiViewModel = geminiViewModel
         if (geminiViewModel.poseDetectionManager == null) {
-            geminiViewModel.poseDetectionManager =
-                com.meta.wearable.dat.externalsampleapps.cameraaccess.openclaw.PoseDetectionManager(context)
+            try {
+                geminiViewModel.poseDetectionManager =
+                    com.meta.wearable.dat.externalsampleapps.cameraaccess.openclaw.PoseDetectionManager(context)
+            } catch (e: UnsatisfiedLinkError) {
+                android.util.Log.w("StreamScreen", "MediaPipe not available on this architecture (emulator?): ${e.message}")
+            }
         }
     }
 

@@ -56,6 +56,9 @@ fun HomeScreen(
   val context = LocalContext.current
 
   Box(modifier = modifier.fillMaxSize()) {
+    // Animated gradient background
+    com.meta.wearable.dat.externalsampleapps.cameraaccess.ui.theme.AnimatedMeshGradientBackground()
+
     // Settings gear (top-right)
     Box(modifier = Modifier.align(Alignment.TopEnd).systemBarsPadding().padding(8.dp)) {
       IconButton(onClick = { viewModel.showSettings() }) {
