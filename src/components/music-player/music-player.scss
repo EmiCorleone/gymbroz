@@ -1,0 +1,56 @@
+.music-player-indicator {
+  position: absolute;
+  bottom: 100px;
+  right: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 10px 16px;
+  border-radius: 12px;
+  z-index: 20;
+  max-width: 300px;
+  font-family: monospace;
+
+  .music-icon {
+    font-size: 24px;
+    color: #ff6b35;
+
+    &.playing {
+      animation: pulse-music 1s ease-in-out infinite;
+    }
+  }
+
+  .music-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    overflow: hidden;
+
+    .music-label {
+      font-size: 11px;
+      color: #ff6b35;
+      text-transform: uppercase;
+      font-weight: bold;
+    }
+
+    .music-prompt {
+      font-size: 12px;
+      color: #cccccc;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+}
+
+@keyframes pulse-music {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
