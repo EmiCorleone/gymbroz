@@ -79,6 +79,8 @@ class PovRepCounter(context: Context) {
 
     // Arm segmentation toggle
     var showArmSegmentation = true
+    // Debug HUD toggle (off by default — Compose UI shows rep count)
+    var showDebugHud = false
 
     private val _overlayData = MutableStateFlow(PoseOverlayData())
     val overlayData: StateFlow<PoseOverlayData> = _overlayData.asStateFlow()
@@ -247,54 +249,84 @@ class PovRepCounter(context: Context) {
             stage = "ready"
         }
 
-        // --- Draw curl threshold line ---
-        canvas.drawLine(0f, curlThreshold * h, w, curlThreshold * h, thresholdPaint)
-
-        // --- Draw forearm direction line ---
-        val palmX = (landmarks[INDEX_MCP].x() + landmarks[MIDDLE_MCP].x() +
-                landmarks[RING_MCP].x() + landmarks[PINKY_MCP].x()) / 4f
-        val palmY = (landmarks[INDEX_MCP].y() + landmarks[MIDDLE_MCP].y() +
-                landmarks[RING_MCP].y() + landmarks[PINKY_MCP].y()) / 4f
-        val dx = wristLm.x() - palmX
-        val dy = wristLm.y() - palmY
-        val armEndX = wristLm.x() + dx * 3f
-        val armEndY = wristLm.y() + dy * 3f
-        canvas.drawLine(
-            wristLm.x() * w, wristLm.y() * h,
-            armEndX * w, armEndY * h,
-            Paint().apply {
-                color = Color.parseColor("#ff6600")
-                strokeWidth = 6f
-                style = Paint.Style.STROKE
-                isAntiAlias = true
-            }
-        )
-
-        // --- HUD ---
-        val hudLeft = 20f
-        val hudTop = 20f
-        val hudWidth = 520f
-        val hudHeight = 200f
-        canvas.drawRoundRect(hudLeft, hudTop, hudLeft + hudWidth, hudTop + hudHeight, 24f, 24f, hudBgPaint)
-
-        canvas.drawText("REPS: $repCount", hudLeft + 20, hudTop + 70, hudTextPaint)
-        canvas.drawText(
-            "Y:${(trackY * 100).roundToInt()}% | Angle:${forearmAngle.roundToInt()}°",
-            hudLeft + 20, hudTop + 115, hudSmallPaint
-        )
-
-        val stageText = (stage ?: "wait").uppercase()
-        val stageColor = when (stage) {
-            "curled" -> Color.parseColor("#ff4400")
-            "ready" -> Color.parseColor("#00ff88")
-            else -> Color.parseColor("#888888")
+        // --- Draw curl threshold band (always visible) ---
+        val bandHeight = 28f
+        val bandY = curlThreshold * h
+        // Gradient band: green-tinted zone above the threshold
+        canvas.drawRect(0f, bandY - bandHeight, w, bandY, Paint().apply {
+            color = Color.argb(80, 0, 255, 100)
+            style = Paint.Style.FILL
+        })
+        // Solid edge lines
+        canvas.drawLine(0f, bandY, w, bandY, Paint().apply {
+            color = Color.argb(180, 0, 255, 100)
+            strokeWidth = 3f
+            style = Paint.Style.STROKE
+            isAntiAlias = true
+        })
+        canvas.drawLine(0f, bandY - bandHeight, w, bandY - bandHeight, Paint().apply {
+            color = Color.argb(100, 0, 255, 100)
+            strokeWidth = 2f
+            style = Paint.Style.STROKE
+            isAntiAlias = true
+        })
+        // Arrow + label
+        val labelPaint = Paint().apply {
+            color = Color.argb(220, 255, 255, 255)
+            textSize = 22f
+            isFakeBoldText = true
+            isAntiAlias = true
+            textAlign = Paint.Align.CENTER
         }
-        stagePaint.color = stageColor
-        val calibText = if (isCalibrated) "calibrated" else "calibrating..."
-        canvas.drawText(
-            "$stageText | curl<${(curlThreshold * 100).roundToInt()}% | $calibText",
-            hudLeft + 20, hudTop + 160, stagePaint
-        )
+        canvas.drawText("CURL ABOVE HERE", w / 2f, bandY - bandHeight / 2f + 7f, labelPaint)
+
+        if (showDebugHud) {
+            // --- Draw forearm direction line ---
+            val palmX = (landmarks[INDEX_MCP].x() + landmarks[MIDDLE_MCP].x() +
+                    landmarks[RING_MCP].x() + landmarks[PINKY_MCP].x()) / 4f
+            val palmY = (landmarks[INDEX_MCP].y() + landmarks[MIDDLE_MCP].y() +
+                    landmarks[RING_MCP].y() + landmarks[PINKY_MCP].y()) / 4f
+            val dx = wristLm.x() - palmX
+            val dy = wristLm.y() - palmY
+            val armEndX = wristLm.x() + dx * 3f
+            val armEndY = wristLm.y() + dy * 3f
+            canvas.drawLine(
+                wristLm.x() * w, wristLm.y() * h,
+                armEndX * w, armEndY * h,
+                Paint().apply {
+                    color = Color.parseColor("#ff6600")
+                    strokeWidth = 6f
+                    style = Paint.Style.STROKE
+                    isAntiAlias = true
+                }
+            )
+
+            // --- HUD ---
+            val hudLeft = 20f
+            val hudTop = 20f
+            val hudWidth = 520f
+            val hudHeight = 200f
+            canvas.drawRoundRect(hudLeft, hudTop, hudLeft + hudWidth, hudTop + hudHeight, 24f, 24f, hudBgPaint)
+
+            canvas.drawText("REPS: $repCount", hudLeft + 20, hudTop + 70, hudTextPaint)
+            canvas.drawText(
+                "Y:${(trackY * 100).roundToInt()}% | Angle:${forearmAngle.roundToInt()}°",
+                hudLeft + 20, hudTop + 115, hudSmallPaint
+            )
+
+            val stageText = (stage ?: "wait").uppercase()
+            val stageColor = when (stage) {
+                "curled" -> Color.parseColor("#ff4400")
+                "ready" -> Color.parseColor("#00ff88")
+                else -> Color.parseColor("#888888")
+            }
+            stagePaint.color = stageColor
+            val calibText = if (isCalibrated) "calibrated" else "calibrating..."
+            canvas.drawText(
+                "$stageText | curl<${(curlThreshold * 100).roundToInt()}% | $calibText",
+                hudLeft + 20, hudTop + 160, stagePaint
+            )
+        }
 
         _overlayData.value = PoseOverlayData(
             bitmap = overlayBitmap,
