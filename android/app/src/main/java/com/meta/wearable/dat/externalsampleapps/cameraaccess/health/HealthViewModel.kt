@@ -1,12 +1,15 @@
 package com.meta.wearable.dat.externalsampleapps.cameraaccess.health
 
+import android.app.Application
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import android.util.Base64
 import android.util.Log
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.meta.wearable.dat.externalsampleapps.cameraaccess.data.ExerciseGuideImage
+import com.meta.wearable.dat.externalsampleapps.cameraaccess.data.GymBroDatabase
 import com.meta.wearable.dat.externalsampleapps.cameraaccess.health.data.*
 import com.meta.wearable.dat.externalsampleapps.cameraaccess.health.data.MockData
 import com.meta.wearable.dat.externalsampleapps.cameraaccess.settings.SettingsManager
@@ -57,9 +60,28 @@ data class HealthUiState(
     val exerciseGuides: Map<String, ExerciseGuideUiState> = emptyMap(),
 )
 
-class HealthViewModel : ViewModel() {
+class HealthViewModel(application: Application) : AndroidViewModel(application) {
     private val _uiState = MutableStateFlow(HealthUiState())
     val uiState: StateFlow<HealthUiState> = _uiState.asStateFlow()
+    private val guideDao = GymBroDatabase.getInstance(application).exerciseGuideDao()
+
+    init {
+        // Load cached exercise guide images from DB on startup
+        viewModelScope.launch {
+            val cached = withContext(Dispatchers.IO) { guideDao.getAll() }
+            if (cached.isNotEmpty()) {
+                val guides = cached.associate { img ->
+                    img.exerciseName to ExerciseGuideUiState(
+                        imageBase64 = img.fullBodyBase64,
+                        closeUpImageBase64 = img.closeUpBase64,
+                        exerciseName = img.exerciseName,
+                    )
+                }
+                _uiState.update { it.copy(exerciseGuides = it.exerciseGuides + guides) }
+                Log.d("HealthViewModel", "Loaded ${cached.size} cached exercise guides from DB")
+            }
+        }
+    }
 
     fun generateWorkoutPlan(gender: String, frequency: String, deviceId: String = "") {
         viewModelScope.launch {
@@ -208,41 +230,69 @@ class HealthViewModel : ViewModel() {
 
     fun generateAllExerciseGuides(exercises: List<String>) {
         allGuidesJob?.cancel()
+        Log.d("HealthViewModel", "generateAllExerciseGuides: ${exercises.size} exercises: $exercises")
+
+        // Mark ungenerated exercises as loading
         val initial = exercises.associateWith { name ->
             _uiState.value.exerciseGuides[name] ?: ExerciseGuideUiState(isGenerating = true, exerciseName = name)
         }
         _uiState.update { it.copy(exerciseGuides = it.exerciseGuides + initial.filter { (_, v) -> v.imageBase64 == null }) }
 
         allGuidesJob = viewModelScope.launch {
-            for (name in exercises) {
+            for ((index, name) in exercises.withIndex()) {
                 val existing = _uiState.value.exerciseGuides[name]
-                if (existing?.imageBase64 != null && existing.closeUpImageBase64 != null) continue
+                if (existing?.imageBase64 != null && existing.closeUpImageBase64 != null) {
+                    Log.d("HealthViewModel", "[$index/${exercises.size}] $name — already cached, skipping")
+                    continue
+                }
 
+                Log.d("HealthViewModel", "[$index/${exercises.size}] Generating images for: $name")
                 _uiState.update {
                     it.copy(exerciseGuides = it.exerciseGuides + (name to ExerciseGuideUiState(isGenerating = true, exerciseName = name)))
                 }
 
-                // Image 1: Full body showing user doing the exercise
+                // Image 1: Full body
                 val fullBodyResult = withContext(Dispatchers.IO) { generateGuideImage(name) }
                 val fullBodyBase64 = fullBodyResult.getOrNull()
+                if (fullBodyBase64 == null) {
+                    Log.e("HealthViewModel", "[$index] Full body FAILED for $name: ${fullBodyResult.exceptionOrNull()?.message}")
+                }
 
-                // Image 2: Close-up of the arm/muscle and proper form
+                // Image 2: Close-up
                 val closeUpResult = withContext(Dispatchers.IO) { generateCloseUpImage(name) }
                 val closeUpBase64 = closeUpResult.getOrNull()
+                if (closeUpBase64 == null) {
+                    Log.e("HealthViewModel", "[$index] Close-up FAILED for $name: ${closeUpResult.exceptionOrNull()?.message}")
+                }
 
                 val error = if (fullBodyBase64 == null && closeUpBase64 == null) {
                     fullBodyResult.exceptionOrNull()?.message ?: "Failed to generate guides"
                 } else null
 
+                val guideState = ExerciseGuideUiState(
+                    imageBase64 = fullBodyBase64,
+                    closeUpImageBase64 = closeUpBase64,
+                    exerciseName = name,
+                    error = error,
+                )
                 _uiState.update {
-                    it.copy(exerciseGuides = it.exerciseGuides + (name to ExerciseGuideUiState(
-                        imageBase64 = fullBodyBase64,
-                        closeUpImageBase64 = closeUpBase64,
-                        exerciseName = name,
-                        error = error,
-                    )))
+                    it.copy(exerciseGuides = it.exerciseGuides + (name to guideState))
+                }
+                Log.d("HealthViewModel", "[$index] $name done — fullBody=${fullBodyBase64 != null}, closeUp=${closeUpBase64 != null}")
+
+                // Save to DB for persistence
+                if (fullBodyBase64 != null || closeUpBase64 != null) {
+                    withContext(Dispatchers.IO) {
+                        guideDao.upsert(ExerciseGuideImage(
+                            exerciseName = name,
+                            fullBodyBase64 = fullBodyBase64,
+                            closeUpBase64 = closeUpBase64,
+                        ))
+                    }
+                    Log.d("HealthViewModel", "[$index] Saved $name to DB")
                 }
             }
+            Log.d("HealthViewModel", "generateAllExerciseGuides COMPLETE — all ${exercises.size} done")
         }
     }
 
@@ -254,21 +304,32 @@ class HealthViewModel : ViewModel() {
 
         val parts = JSONArray()
 
-        // Add mirror photo if available
+        // Add mirror photo — this is the user's selfie used as reference
         val photoPath = mirrorPhotoPath
+        Log.d("HealthViewModel", "generateGuideImage($exerciseName) mirrorPhotoPath=$photoPath")
         if (photoPath != null) {
-            val bitmap = loadBitmapWithExifRotation(photoPath)
-            if (bitmap != null) {
-                val baos = ByteArrayOutputStream()
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 70, baos)
-                val base64 = Base64.encodeToString(baos.toByteArray(), Base64.NO_WRAP)
-                parts.put(JSONObject().apply {
-                    put("inlineData", JSONObject().apply {
-                        put("mimeType", "image/jpeg")
-                        put("data", base64)
+            val file = java.io.File(photoPath)
+            if (file.exists()) {
+                val bitmap = loadBitmapWithExifRotation(photoPath)
+                if (bitmap != null) {
+                    val baos = ByteArrayOutputStream()
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 70, baos)
+                    val base64 = Base64.encodeToString(baos.toByteArray(), Base64.NO_WRAP)
+                    Log.d("HealthViewModel", "Attached mirror photo (${baos.size()} bytes) for $exerciseName")
+                    parts.put(JSONObject().apply {
+                        put("inlineData", JSONObject().apply {
+                            put("mimeType", "image/jpeg")
+                            put("data", base64)
+                        })
                     })
-                })
+                } else {
+                    Log.e("HealthViewModel", "Failed to decode bitmap from $photoPath")
+                }
+            } else {
+                Log.e("HealthViewModel", "Mirror photo file does not exist: $photoPath")
             }
+        } else {
+            Log.w("HealthViewModel", "No mirror photo path set — generating without user reference")
         }
 
         parts.put(JSONObject().apply {
@@ -302,6 +363,7 @@ class HealthViewModel : ViewModel() {
         response.close()
 
         if (response.code !in 200..299) {
+            Log.e("HealthViewModel", "API error ${response.code} for $exerciseName: ${body.take(500)}")
             return Result.failure(Exception("API error: ${response.code}"))
         }
 
@@ -314,10 +376,14 @@ class HealthViewModel : ViewModel() {
                 val inlineData = part.optJSONObject("inlineData") ?: part.optJSONObject("inline_data")
                 if (inlineData != null) {
                     val data = inlineData.optString("data", "")
-                    if (data.isNotBlank()) return Result.success(data)
+                    if (data.isNotBlank()) {
+                        Log.d("HealthViewModel", "Got full-body image for $exerciseName (${data.length} chars)")
+                        return Result.success(data)
+                    }
                 }
             }
         }
+        Log.e("HealthViewModel", "No image in response for $exerciseName. Body: ${body.take(500)}")
         return Result.failure(Exception("No image in response"))
     }
 
@@ -328,13 +394,42 @@ class HealthViewModel : ViewModel() {
         }
 
         val parts = JSONArray()
+
+        // Include the user's mirror photo so the close-up is based on THEM
+        val photoPath = mirrorPhotoPath
+        Log.d("HealthViewModel", "generateCloseUpImage($exerciseName) mirrorPhotoPath=$photoPath")
+        if (photoPath != null) {
+            val file = java.io.File(photoPath)
+            if (file.exists()) {
+                val bitmap = loadBitmapWithExifRotation(photoPath)
+                if (bitmap != null) {
+                    val baos = ByteArrayOutputStream()
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 70, baos)
+                    val base64 = Base64.encodeToString(baos.toByteArray(), Base64.NO_WRAP)
+                    Log.d("HealthViewModel", "Attached mirror photo (${baos.size()} bytes) for close-up $exerciseName")
+                    parts.put(JSONObject().apply {
+                        put("inlineData", JSONObject().apply {
+                            put("mimeType", "image/jpeg")
+                            put("data", base64)
+                        })
+                    })
+                } else {
+                    Log.e("HealthViewModel", "Failed to decode bitmap from $photoPath for close-up")
+                }
+            } else {
+                Log.e("HealthViewModel", "Mirror photo file does not exist: $photoPath for close-up")
+            }
+        } else {
+            Log.w("HealthViewModel", "No mirror photo path for close-up — generating without user reference")
+        }
+
         parts.put(JSONObject().apply {
-            put("text", "Generate a close-up instructional image for the exercise: $exerciseName. " +
-                "Show ONLY the specific body part and muscle group involved — for example, if it's a Bicep Curl, " +
-                "show a close-up of the arm from elbow to hand gripping the dumbbell, with the bicep muscle visible. " +
-                "Show the correct grip, wrist position, and muscle engagement. " +
-                "Use clean lighting, fitness photography style. No text overlays. " +
-                "Focus tightly on the form detail, not the full body.")
+            put("text", "Edit this image. Keep the EXACT same person — same face, skin tone, body, clothing, " +
+                "and environment. Change their pose to show the correct form for: $exerciseName. " +
+                "Then CROP the result to a close-up view focusing on the primary muscles and limbs involved. " +
+                "For example, if it's a bicep curl, crop tightly on the arm showing the grip, bicep contraction, " +
+                "and elbow position. The person in the image must look identical to the original photo. " +
+                "Do NOT generate a different person. Just re-pose and crop.")
         })
 
         val requestBody = JSONObject().apply {
@@ -361,6 +456,7 @@ class HealthViewModel : ViewModel() {
         response.close()
 
         if (response.code !in 200..299) {
+            Log.e("HealthViewModel", "API error ${response.code} for close-up $exerciseName: ${body.take(500)}")
             return Result.failure(Exception("API error: ${response.code}"))
         }
 
@@ -373,10 +469,14 @@ class HealthViewModel : ViewModel() {
                 val inlineData = part.optJSONObject("inlineData") ?: part.optJSONObject("inline_data")
                 if (inlineData != null) {
                     val data = inlineData.optString("data", "")
-                    if (data.isNotBlank()) return Result.success(data)
+                    if (data.isNotBlank()) {
+                        Log.d("HealthViewModel", "Got close-up image for $exerciseName (${data.length} chars)")
+                        return Result.success(data)
+                    }
                 }
             }
         }
+        Log.e("HealthViewModel", "No image in close-up response for $exerciseName. Body: ${body.take(500)}")
         return Result.failure(Exception("No image in response"))
     }
 
