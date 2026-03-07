@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -26,6 +27,7 @@ fun ControlsRow(
     onCapturePhoto: () -> Unit,
     onToggleAI: () -> Unit,
     isAIActive: Boolean,
+    onTestExerciseGuide: () -> Unit,
     onToggleLive: () -> Unit,
     isLiveActive: Boolean,
     modifier: Modifier = Modifier,
@@ -62,6 +64,23 @@ fun ControlsRow(
             Icon(
                 imageVector = Icons.Default.AutoAwesome,
                 contentDescription = if (isAIActive) "Stop AI" else "Start AI",
+                tint = Color.White,
+            )
+        }
+
+        // Exercise guide test button
+        Button(
+            onClick = onTestExerciseGuide,
+            modifier = Modifier.aspectRatio(1f),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFF2196F3),
+            ),
+            shape = CircleShape,
+            contentPadding = PaddingValues(0.dp),
+        ) {
+            Icon(
+                imageVector = Icons.Default.FitnessCenter,
+                contentDescription = "Test Exercise Guide",
                 tint = Color.White,
             )
         }

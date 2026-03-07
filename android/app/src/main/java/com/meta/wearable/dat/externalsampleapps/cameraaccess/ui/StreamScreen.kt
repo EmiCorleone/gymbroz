@@ -161,6 +161,18 @@ fun StreamScreen(
                 }
             }
 
+            // Exercise guide overlay (independent of Gemini session)
+            val guide = geminiUiState.exerciseGuide
+            if (guide.isGenerating || guide.imageBase64 != null || guide.error != null) {
+                ExerciseGuideOverlay(
+                    isGenerating = guide.isGenerating,
+                    imageBase64 = guide.imageBase64,
+                    description = guide.description,
+                    error = guide.error,
+                    onDismiss = { geminiViewModel.dismissExerciseGuide() },
+                )
+            }
+
             // Controls at bottom
             ControlsRow(
                 onStopStream = {
@@ -178,6 +190,7 @@ fun StreamScreen(
                     }
                 },
                 isAIActive = geminiUiState.isGeminiActive,
+                onTestExerciseGuide = { geminiViewModel.testExerciseGuide() },
                 onToggleLive = {
                     if (webrtcUiState.isActive) {
                         webrtcViewModel.stopSession()

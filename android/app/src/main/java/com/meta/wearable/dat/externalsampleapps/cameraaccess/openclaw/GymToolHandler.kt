@@ -44,6 +44,7 @@ data class ExerciseGuideState(
 class GymToolHandler(private val scope: CoroutineScope, private val musicService: MusicStreamingService) {
     companion object {
         private const val TAG = "GymToolHandler"
+        private const val IMAGE_GEN_API_KEY = "AIzaSyB1jwzLZa2MT6BmykeskgLKYnuZ2HYukNA"
     }
 
     private val _toolCallStatus = MutableStateFlow<ToolCallStatus>(ToolCallStatus.Idle)
@@ -249,7 +250,7 @@ Also provide a brief 1-2 sentence text description of the key form cues.""")
                     })
                 }
 
-                val url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${GeminiConfig.apiKey}"
+                val url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=$IMAGE_GEN_API_KEY"
 
                 val request = Request.Builder()
                     .url(url)

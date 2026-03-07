@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.meta.wearable.dat.externalsampleapps.cameraaccess.openclaw.ExerciseGuideState
+import com.meta.wearable.dat.externalsampleapps.cameraaccess.openclaw.GeminiFunctionCall
 import com.meta.wearable.dat.externalsampleapps.cameraaccess.openclaw.GymToolHandler
 import com.meta.wearable.dat.externalsampleapps.cameraaccess.openclaw.MusicState
 import com.meta.wearable.dat.externalsampleapps.cameraaccess.openclaw.MusicStreamingService
@@ -211,6 +212,8 @@ class GeminiSessionViewModel : ViewModel() {
     }
 
     fun sendVideoFrameIfThrottled(bitmap: Bitmap) {
+        latestFrame = bitmap
+        gymToolHandler?.latestFrame = bitmap
         if (!_uiState.value.isGeminiActive) return
         if (_uiState.value.connectionState != GeminiConnectionState.Ready) return
 
@@ -223,12 +226,60 @@ class GeminiSessionViewModel : ViewModel() {
         if (now - lastVideoFrameTime < GeminiConfig.VIDEO_FRAME_INTERVAL_MS) return
         lastVideoFrameTime = now
         geminiService.sendVideoFrame(bitmap)
-        // Keep latest frame for exercise guide
-        gymToolHandler?.latestFrame = bitmap
+    }
+
+    // Store latest frame even without Gemini active (for test button)
+    var latestFrame: Bitmap? = null
+    private var testGuideJob: Job? = null
+    private var testHandler: GymToolHandler? = null
+
+    fun testExerciseGuide() {
+        Log.d(TAG, "testExerciseGuide called, latestFrame=${latestFrame != null}")
+        if (_uiState.value.exerciseGuide.isGenerating) return // already in progress
+
+        val frame = latestFrame ?: gymToolHandler?.latestFrame
+        if (frame == null) {
+            Log.e(TAG, "No camera frame available for exercise guide")
+            _uiState.value = _uiState.value.copy(
+                exerciseGuide = ExerciseGuideState(error = "No camera frame available")
+            )
+            return
+        }
+
+        val handler = gymToolHandler ?: run {
+            val h = testHandler ?: GymToolHandler(viewModelScope, MusicStreamingService(viewModelScope))
+            testHandler = h
+            h
+        }
+        handler.latestFrame = frame
+
+        _uiState.value = _uiState.value.copy(
+            exerciseGuide = ExerciseGuideState(isGenerating = true)
+        )
+
+        testGuideJob?.cancel()
+        testGuideJob = viewModelScope.launch {
+            handler.handleToolCall(
+                GeminiFunctionCall(
+                    id = "test_guide_${System.currentTimeMillis()}",
+                    name = "generate_exercise_guide",
+                    args = mapOf("exercise_description" to "bench press")
+                )
+            ) { /* ignore tool response */ }
+
+            // Wait for result
+            handler.exerciseGuide.collect { guideState ->
+                _uiState.value = _uiState.value.copy(exerciseGuide = guideState)
+                if (!guideState.isGenerating && (guideState.imageBase64 != null || guideState.error != null)) {
+                    return@collect
+                }
+            }
+        }
     }
 
     fun dismissExerciseGuide() {
         gymToolHandler?.dismissExerciseGuide()
+        _uiState.value = _uiState.value.copy(exerciseGuide = ExerciseGuideState())
     }
 
     fun clearError() {

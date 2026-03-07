@@ -104,16 +104,15 @@ fun GeminiOverlay(
             )
         }
 
-        // Exercise guide (center overlay)
+        // Exercise guide (fullscreen overlay on top of everything)
         val guide = uiState.exerciseGuide
-        if (guide.isGenerating || guide.imageBase64 != null) {
+        if (guide.isGenerating || guide.imageBase64 != null || guide.error != null) {
             ExerciseGuideOverlay(
                 isGenerating = guide.isGenerating,
                 imageBase64 = guide.imageBase64,
                 description = guide.description,
                 error = guide.error,
                 onDismiss = onDismissExerciseGuide,
-                modifier = Modifier.align(Alignment.Center).padding(24.dp),
             )
         }
     }
@@ -312,67 +311,51 @@ fun ExerciseGuideOverlay(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    // Fullscreen dark backdrop
     Box(
         modifier = modifier
-            .background(Color.Black.copy(alpha = 0.9f), RoundedCornerShape(16.dp))
-            .padding(16.dp),
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.4f))
+            .clickable(enabled = !isGenerating) { onDismiss() },
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            // Header with close button
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = "Exercise Guide",
-                    color = Color.White,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
+        if (isGenerating) {
+            CircularProgressIndicator(
+                color = Color.White,
+                modifier = Modifier.align(Alignment.Center).size(48.dp),
+                strokeWidth = 4.dp,
+            )
+        } else if (imageBase64 != null) {
+            val bitmap = remember(imageBase64) {
+                val bytes = Base64.decode(imageBase64, Base64.DEFAULT)
+                BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+            }
+            if (bitmap != null) {
+                Image(
+                    bitmap = bitmap.asImageBitmap(),
+                    contentDescription = "Exercise form guide",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Fit,
                 )
-                if (!isGenerating) {
-                    IconButton(onClick = onDismiss, modifier = Modifier.size(32.dp)) {
-                        Icon(Icons.Default.Close, contentDescription = "Close", tint = Color.White)
-                    }
-                }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            if (isGenerating) {
-                CircularProgressIndicator(color = Color.White, modifier = Modifier.size(48.dp))
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(text = "Generating form guide...", color = Color.White.copy(alpha = 0.7f), fontSize = 13.sp)
-            } else if (imageBase64 != null) {
-                val bitmap = remember(imageBase64) {
-                    val bytes = Base64.decode(imageBase64, Base64.DEFAULT)
-                    BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-                }
-                if (bitmap != null) {
-                    Image(
-                        bitmap = bitmap.asImageBitmap(),
-                        contentDescription = "Exercise form guide",
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(300.dp)
-                            .clip(RoundedCornerShape(8.dp)),
-                        contentScale = ContentScale.Fit,
-                    )
-                }
-                if (!description.isNullOrEmpty()) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = description,
-                        color = Color.White.copy(alpha = 0.85f),
-                        fontSize = 13.sp,
-                    )
-                }
-            } else if (!error.isNullOrEmpty()) {
-                Text(text = error, color = Color(0xFFF44336), fontSize = 13.sp)
+            // Close button
+            IconButton(
+                onClick = onDismiss,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(16.dp)
+                    .size(44.dp)
+                    .background(Color.Black.copy(alpha = 0.6f), CircleShape),
+            ) {
+                Icon(Icons.Default.Close, contentDescription = "Close", tint = Color.White, modifier = Modifier.size(24.dp))
             }
+        } else if (!error.isNullOrEmpty()) {
+            Text(
+                text = error,
+                color = Color(0xFFF44336),
+                fontSize = 14.sp,
+                modifier = Modifier.align(Alignment.Center),
+            )
         }
     }
 }
