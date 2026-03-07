@@ -6,6 +6,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
   alias(libs.plugins.android.application)
   alias(libs.plugins.jetbrains.kotlin.android)
@@ -19,6 +22,15 @@ android {
 
   buildFeatures { buildConfig = true }
 
+  val localProperties = Properties()
+  val localPropertiesFile = rootProject.file("local.properties")
+  if (localPropertiesFile.exists()) {
+      localProperties.load(FileInputStream(localPropertiesFile))
+  }
+  
+  val supabaseUrl = localProperties.getProperty("SUPABASE_URL") ?: "\"\""
+  val supabaseAnonKey = localProperties.getProperty("SUPABASE_ANON_KEY") ?: "\"\""
+
   defaultConfig {
     applicationId = "com.meta.wearable.dat.externalsampleapps.cameraaccess"
     minSdk = 31
@@ -28,6 +40,9 @@ android {
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     vectorDrawables { useSupportLibrary = true }
+
+    buildConfigField("String", "SUPABASE_URL", "\"$supabaseUrl\"")
+    buildConfigField("String", "SUPABASE_ANON_KEY", "\"$supabaseAnonKey\"")
   }
 
   buildTypes {
@@ -84,6 +99,11 @@ dependencies {
   ksp(libs.room.compiler)
   // Navigation
   implementation(libs.navigation.compose)
+  // Supabase
+  implementation(libs.supabase.gotrue)
+  implementation(libs.supabase.postgrest)
+  implementation(libs.supabase.storage)
+  implementation(libs.ktor.client.android)
   androidTestImplementation(libs.androidx.ui.test.junit4)
   androidTestImplementation(libs.androidx.test.uiautomator)
   androidTestImplementation(libs.androidx.test.rules)

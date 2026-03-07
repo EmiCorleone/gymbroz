@@ -18,6 +18,7 @@ import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.lifecycle.lifecycleScope
 import androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions
 import androidx.activity.viewModels
 import com.meta.wearable.dat.core.Wearables
@@ -35,6 +36,8 @@ import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.launch
+import io.github.jan.supabase.gotrue.auth
 
 class MainActivity : ComponentActivity() {
   companion object {
@@ -81,6 +84,18 @@ class MainActivity : ComponentActivity() {
 
       // Start observing Wearables state after SDK is initialized
       viewModel.startMonitoring()
+    }
+    
+    // Ensure Supabase anonymous session exists on boot
+    lifecycleScope.launch {
+        try {
+            val auth = com.meta.wearable.dat.externalsampleapps.cameraaccess.data.GymBroSupabaseClient.client.auth
+            if (auth.currentSessionOrNull() == null) {
+                auth.signInAnonymously()
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     setContent {
