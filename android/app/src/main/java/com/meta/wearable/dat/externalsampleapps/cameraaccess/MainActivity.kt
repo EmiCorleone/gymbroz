@@ -101,6 +101,7 @@ class MainActivity : ComponentActivity() {
           MainAppContainer(
               wearablesViewModel = viewModel,
               onRequestWearablesPermission = ::requestWearablesPermission,
+              onRestartOnboarding = { onboardingViewModel.restartOnboarding() },
           )
         }
       }

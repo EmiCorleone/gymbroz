@@ -65,6 +65,7 @@ fun CameraAccessScaffold(
     viewModel: WearablesViewModel,
     onRequestWearablesPermission: suspend (Permission) -> PermissionStatus,
     modifier: Modifier = Modifier,
+    onRestartOnboarding: (() -> Unit)? = null,
 ) {
   val uiState by viewModel.uiState.collectAsStateWithLifecycle()
   val snackbarHostState = remember { SnackbarHostState() }
@@ -84,6 +85,7 @@ fun CameraAccessScaffold(
         uiState.isSettingsVisible ->
             SettingsScreen(
                 onBack = { viewModel.hideSettings() },
+                onRestartOnboarding = onRestartOnboarding,
             )
         uiState.isStreaming ->
             StreamScreen(

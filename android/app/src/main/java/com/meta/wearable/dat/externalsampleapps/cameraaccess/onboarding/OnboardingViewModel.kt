@@ -92,4 +92,12 @@ class OnboardingViewModel(application: Application) : AndroidViewModel(applicati
             onComplete()
         }
     }
+
+    fun restartOnboarding() {
+        viewModelScope.launch {
+            repository.clearProfile()
+            _state.value = OnboardingState()
+            _isOnboardingComplete.value = false
+        }
+    }
 }

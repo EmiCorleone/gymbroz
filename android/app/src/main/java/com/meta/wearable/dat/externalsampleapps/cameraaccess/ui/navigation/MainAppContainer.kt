@@ -51,7 +51,8 @@ enum class BottomNavItem(
 @Composable
 fun MainAppContainer(
     wearablesViewModel: WearablesViewModel,
-    onRequestWearablesPermission: suspend (Permission) -> PermissionStatus
+    onRequestWearablesPermission: suspend (Permission) -> PermissionStatus,
+    onRestartOnboarding: () -> Unit = {},
 ) {
     var currentTab by remember { mutableStateOf(BottomNavItem.Dashboard) }
     val dashboardViewModel: DashboardViewModel = viewModel()
@@ -86,7 +87,8 @@ fun MainAppContainer(
                     BottomNavItem.Workout -> {
                         CameraAccessScaffold(
                             viewModel = wearablesViewModel,
-                            onRequestWearablesPermission = onRequestWearablesPermission
+                            onRequestWearablesPermission = onRequestWearablesPermission,
+                            onRestartOnboarding = onRestartOnboarding,
                         )
                     }
                     BottomNavItem.Profile -> {
@@ -94,7 +96,8 @@ fun MainAppContainer(
                             profile = dashState.profile,
                             totalWorkouts = dashState.totalWorkouts,
                             totalReps = dashState.totalReps,
-                            onOpenSettings = { /* TODO: open settings */ }
+                            onOpenSettings = { /* TODO: open settings */ },
+                            onRestartOnboarding = onRestartOnboarding,
                         )
                     }
                 }

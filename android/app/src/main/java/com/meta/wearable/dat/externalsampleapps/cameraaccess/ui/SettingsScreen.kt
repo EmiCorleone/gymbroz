@@ -45,6 +45,7 @@ import com.meta.wearable.dat.externalsampleapps.cameraaccess.settings.SettingsMa
 fun SettingsScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    onRestartOnboarding: (() -> Unit)? = null,
 ) {
     var geminiAPIKey by remember { mutableStateOf(SettingsManager.geminiAPIKey) }
     var systemPrompt by remember { mutableStateOf(SettingsManager.geminiSystemPrompt) }
@@ -169,6 +170,13 @@ fun SettingsScreen(
             // Reset
             TextButton(onClick = { showResetDialog = true }) {
                 Text("Reset to Defaults", color = Color.Red)
+            }
+
+            // Restart Onboarding
+            if (onRestartOnboarding != null) {
+                TextButton(onClick = { onRestartOnboarding() }) {
+                    Text("Restart Onboarding", color = AppColor.TextMuted)
+                }
             }
 
             Spacer(modifier = Modifier.height(32.dp))

@@ -38,6 +38,7 @@ fun ProfileScreen(
     totalWorkouts: Int,
     totalReps: Int,
     onOpenSettings: () -> Unit,
+    onRestartOnboarding: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val scrollState = rememberScrollState()
@@ -143,6 +144,10 @@ fun ProfileScreen(
                     }
                     Icon(Icons.Default.ChevronRight, contentDescription = null, tint = AppColor.TextMuted, modifier = Modifier.size(20.dp))
                 }
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            TextButton(onClick = onRestartOnboarding, modifier = Modifier.fillMaxWidth()) {
+                Text("Restart Onboarding", fontSize = 13.sp, color = AppColor.TextMuted)
             }
             Spacer(modifier = Modifier.height(100.dp))
         }
