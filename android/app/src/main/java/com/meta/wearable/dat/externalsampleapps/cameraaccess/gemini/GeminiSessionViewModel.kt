@@ -56,6 +56,7 @@ class GeminiSessionViewModel(application: Application) : AndroidViewModel(applic
     // When true, use POV hand tracking instead of 3rd-person pose detection
     var usePovMode: Boolean = true
     private var lastVideoFrameTime: Long = 0
+    private var repFrameSkip: Int = 0
     private var stateObservationJob: Job? = null
 
     var streamingMode: StreamingMode = StreamingMode.GLASSES
@@ -242,15 +243,29 @@ class GeminiSessionViewModel(application: Application) : AndroidViewModel(applic
     }
 
     fun sendVideoFrameIfThrottled(bitmap: Bitmap) {
-        latestFrame = bitmap
-        gymToolHandler?.latestFrame = bitmap
+        // Downsample large frames (e.g. glasses stream) to reduce MediaPipe cost
+        val maxDim = 480
+        val processed = if (bitmap.width > maxDim || bitmap.height > maxDim) {
+            val scale = maxDim.toFloat() / maxOf(bitmap.width, bitmap.height)
+            Bitmap.createScaledBitmap(
+                bitmap,
+                (bitmap.width * scale).toInt(),
+                (bitmap.height * scale).toInt(),
+                true
+            )
+        } else {
+            bitmap
+        }
 
-        // Run rep counting on every frame when active (works without Gemini)
-        if (_uiState.value.repCounter.active) {
+        latestFrame = processed
+        gymToolHandler?.latestFrame = processed
+
+        // Run rep counting on every other frame when active (works without Gemini)
+        if (_uiState.value.repCounter.active && ++repFrameSkip % 2 == 0) {
             val overlay = if (usePovMode) {
-                povRepCounter?.processFrame(bitmap)
+                povRepCounter?.processFrame(processed)
             } else {
-                poseDetectionManager?.processFrame(bitmap)
+                poseDetectionManager?.processFrame(processed)
             }
             if (overlay != null) {
                 val poseData = if (usePovMode) {
@@ -270,7 +285,7 @@ class GeminiSessionViewModel(application: Application) : AndroidViewModel(applic
         val now = System.currentTimeMillis()
         if (now - lastVideoFrameTime < GeminiConfig.VIDEO_FRAME_INTERVAL_MS) return
         lastVideoFrameTime = now
-        geminiService.sendVideoFrame(bitmap)
+        geminiService.sendVideoFrame(processed)
     }
 
     fun toggleRepCounting() {
