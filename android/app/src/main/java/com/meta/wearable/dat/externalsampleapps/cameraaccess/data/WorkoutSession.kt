@@ -12,5 +12,6 @@ data class WorkoutSession(
     val durationMinutes: Int = 0,
     val totalReps: Int = 0,
     val totalExercises: Int = 0,
-    val isPhoneMode: Boolean = false
+    val isPhoneMode: Boolean = false,
+    val videoUrl: String? = null
 )

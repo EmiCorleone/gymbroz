@@ -60,7 +60,7 @@ class WorkoutRepository(context: Context) {
         return localId
     }
 
-    suspend fun endSession(sessionId: Long, totalReps: Int, totalExercises: Int) {
+    suspend fun endSession(sessionId: Long, totalReps: Int, totalExercises: Int, videoUrl: String? = null) {
         val session = workoutDao.getSessionById(sessionId) ?: return
         val now = System.currentTimeMillis()
         val durationMinutes = ((now - session.startTime) / 60000).toInt()
@@ -68,7 +68,8 @@ class WorkoutRepository(context: Context) {
             endTime = now,
             durationMinutes = durationMinutes,
             totalReps = totalReps,
-            totalExercises = totalExercises
+            totalExercises = totalExercises,
+            videoUrl = videoUrl
         )
         workoutDao.updateSession(updatedSession)
         
@@ -85,7 +86,8 @@ class WorkoutRepository(context: Context) {
                 val is_phone_mode: Boolean,
                 val total_reps: Int,
                 val total_exercises: Int,
-                val duration_minutes: Int
+                val duration_minutes: Int,
+                val video_url: String?
             )
             
             val supabaseSession = SupabaseWorkoutSession(
@@ -94,7 +96,8 @@ class WorkoutRepository(context: Context) {
                 is_phone_mode = updatedSession.isPhoneMode,
                 total_reps = updatedSession.totalReps,
                 total_exercises = updatedSession.totalExercises,
-                duration_minutes = updatedSession.durationMinutes
+                duration_minutes = updatedSession.durationMinutes,
+                video_url = updatedSession.videoUrl
             )
             postgrest.from("workout_sessions").upsert(supabaseSession)
         } catch (e: Exception) {
@@ -152,6 +155,37 @@ class WorkoutRepository(context: Context) {
         }
         
         return localId
+    }
+
+    suspend fun logRepEvent(
+        sessionId: Long,
+        exerciseName: String,
+        repNumber: Int
+    ) {
+        // Sync directly to Supabase since we don't have a local representation of rep_events
+        try {
+            val auth = GymBroSupabaseClient.client.auth
+            val postgrest = GymBroSupabaseClient.client.postgrest
+            val userId = auth.currentUserOrNull()?.id ?: return
+            
+            @kotlinx.serialization.Serializable
+            data class SupabaseRepEvent(
+                val session_id: String,
+                val user_id: String,
+                val exercise_name: String,
+                val rep_number: Int
+            )
+            
+            val supabaseEvent = SupabaseRepEvent(
+                session_id = sessionId.toString(),
+                user_id = userId,
+                exercise_name = exerciseName,
+                rep_number = repNumber
+            )
+            postgrest.from("rep_events").insert(supabaseEvent)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     suspend fun getExerciseSetsForSession(sessionId: Long) =

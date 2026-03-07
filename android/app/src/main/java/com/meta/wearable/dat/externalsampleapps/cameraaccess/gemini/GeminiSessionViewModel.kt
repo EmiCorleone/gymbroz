@@ -59,6 +59,8 @@ class GeminiSessionViewModel(application: Application) : AndroidViewModel(applic
     private var stateObservationJob: Job? = null
 
     var streamingMode: StreamingMode = StreamingMode.GLASSES
+    var currentSessionId: Long? = null
+    private val repository by lazy { WorkoutRepository(application) }
 
     private suspend fun loadMirrorPhotoPath(): String? {
         return WorkoutRepository(getApplication()).getProfile()?.mirrorPhotoPath
@@ -158,14 +160,26 @@ class GeminiSessionViewModel(application: Application) : AndroidViewModel(applic
                     // Inject rep count updates into Gemini context (throttled to every 5s)
                     val currentReps = poseData.repCount
                     val now = System.currentTimeMillis()
-                    if (handler.repCounter.value.active && currentReps != lastRepCount && currentReps > 0
-                        && now - lastRepInjectionTime > 5000) {
+                    val repCounterActive = handler.repCounter.value.active
+                    val exerciseName = handler.repCounter.value.exercise
+                    
+                    if (repCounterActive && currentReps != lastRepCount && currentReps > 0) {
                         lastRepCount = currentReps
-                        lastRepInjectionTime = now
-                        geminiService.sendContextText(
-                            "[System update — do NOT respond to this message verbally unless asked. " +
-                            "Rep counter: ${handler.repCounter.value.exercise}, current count: $currentReps reps]"
-                        )
+                        
+                        // Log to Supabase immediately in the background
+                        currentSessionId?.let { sId ->
+                            viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                                repository.logRepEvent(sId, exerciseName, currentReps)
+                            }
+                        }
+
+                        if (now - lastRepInjectionTime > 5000) {
+                            lastRepInjectionTime = now
+                            geminiService.sendContextText(
+                                "[System update — do NOT respond to this message verbally unless asked. " +
+                                "Rep counter: ${exerciseName}, current count: $currentReps reps]"
+                            )
+                        }
                     }
                     _uiState.value = _uiState.value.copy(
                         connectionState = geminiService.connectionState.value,

@@ -37,6 +37,9 @@ import com.meta.wearable.dat.externalsampleapps.cameraaccess.gemini.GeminiSessio
 import com.meta.wearable.dat.externalsampleapps.cameraaccess.phone.PhoneCameraManager
 import com.meta.wearable.dat.externalsampleapps.cameraaccess.wearables.WearablesViewModel
 import com.meta.wearable.dat.externalsampleapps.cameraaccess.webrtc.WebRTCSessionViewModel
+import io.github.jan.supabase.gotrue.auth
+import io.github.jan.supabase.storage.storage
+import com.meta.wearable.dat.externalsampleapps.cameraaccess.data.GymBroSupabaseClient
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -72,6 +75,10 @@ class StreamViewModel(
   var geminiViewModel: GeminiSessionViewModel? = null
   var webrtcViewModel: WebRTCSessionViewModel? = null
   private var phoneCameraManager: PhoneCameraManager? = null
+  
+  private val repository by lazy { com.meta.wearable.dat.externalsampleapps.cameraaccess.data.WorkoutRepository(application) }
+  private var currentSessionId: Long? = null
+  private var videoEncoder: BackgroundVideoEncoder? = null
 
   fun startStream() {
     videoJob?.cancel()
@@ -79,6 +86,15 @@ class StreamViewModel(
 
     // Start foreground service to keep streaming alive in background / screen locked
     StreamingService.start(getApplication())
+
+    viewModelScope.launch {
+        currentSessionId = repository.startSession(isPhoneMode = false)
+        geminiViewModel?.currentSessionId = currentSessionId
+        
+        val cacheDir = getApplication<Application>().cacheDir
+        val outputFile = File(cacheDir, "workout_${System.currentTimeMillis()}.mp4")
+        videoEncoder = BackgroundVideoEncoder(outputFile, 720, 1280) // Typical portrait config
+    }
 
     val streamSession =
         Wearables.startStreamSession(
@@ -108,12 +124,30 @@ class StreamViewModel(
     val manager = PhoneCameraManager(getApplication())
     phoneCameraManager = manager
 
+    viewModelScope.launch {
+        currentSessionId = repository.startSession(isPhoneMode = true)
+        geminiViewModel?.currentSessionId = currentSessionId
+        
+        val cacheDir = getApplication<Application>().cacheDir
+        val outputFile = File(cacheDir, "workout_${System.currentTimeMillis()}.mp4")
+        videoEncoder = BackgroundVideoEncoder(outputFile, 720, 1280) // Typical phone config
+    }
+
     manager.onFrameCaptured = { bitmap ->
       _uiState.update { it.copy(videoFrame = bitmap) }
       // Forward to Gemini (throttled inside the VM)
       geminiViewModel?.sendVideoFrameIfThrottled(bitmap)
       // Forward to WebRTC (every frame)
       webrtcViewModel?.pushVideoFrame(bitmap)
+      
+      // Encode frame to video in background
+      viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+          try {
+              videoEncoder?.encodeFrame(bitmap)
+          } catch (e: Exception) {
+              Log.e(TAG, "Error encoding phone camera frame: ${e.message}")
+          }
+      }
     }
 
     _uiState.update {
@@ -129,6 +163,48 @@ class StreamViewModel(
   fun stopStream() {
     // Stop foreground service
     StreamingService.stop(getApplication())
+
+    viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+        currentSessionId?.let { sId ->
+            val totalReps = geminiViewModel?.uiState?.value?.repCounter?.repCount ?: 0
+            val totalExercises = if (totalReps > 0) 1 else 0 // Simplified for now since we only track bicep curls
+            
+            // Finish video encoding
+            val outputFile = videoEncoder?.finish()
+            videoEncoder = null
+            
+            var remoteUrl: String? = null
+            if (outputFile != null && outputFile.exists()) {
+                try {
+                    val storage = GymBroSupabaseClient.client.storage
+                    val auth = GymBroSupabaseClient.client.auth
+                    val userId = auth.currentUserOrNull()?.id
+                    if (userId != null) {
+                        val path = "$userId/${outputFile.name}"
+                        // Read chunks or whole byte array. For short videos, readBytes is okay
+                        storage.from("gymbro_videos").upload(path, outputFile.readBytes())
+                        remoteUrl = storage.from("gymbro_videos").publicUrl(path)
+                        Log.d(TAG, "Successfully uploaded video to $remoteUrl")
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to upload video to Supabase", e)
+                } finally {
+                    try {
+                        outputFile.delete() // Cleanup
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Failed to delete local video file", e)
+                    }
+                }
+            }
+
+            repository.endSession(sessionId = sId, totalReps = totalReps, totalExercises = totalExercises, videoUrl = remoteUrl)
+        }
+        
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.Main) {
+            currentSessionId = null
+            geminiViewModel?.currentSessionId = null
+        }
+    }
 
     videoJob?.cancel()
     videoJob = null
@@ -241,6 +317,15 @@ class StreamViewModel(
     geminiViewModel?.sendVideoFrameIfThrottled(bitmap)
     // Forward to WebRTC (every frame)
     webrtcViewModel?.pushVideoFrame(bitmap)
+
+    // Encode frame to video in background
+    viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+        try {
+            videoEncoder?.encodeFrame(bitmap)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error encoding glasses camera frame: ${e.message}")
+        }
+    }
   }
 
   // Convert I420 (YYYYYYYY:UUVV) to NV21 (YYYYYYYY:VUVU)
