@@ -16,6 +16,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.RepeatOne
 import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -24,8 +25,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
@@ -38,6 +37,8 @@ fun ControlsRow(
     onTestExerciseGuide: () -> Unit,
     onToggleLive: () -> Unit,
     isLiveActive: Boolean,
+    onToggleRepCounter: () -> Unit,
+    isRepCounterActive: Boolean,
     modifier: Modifier = Modifier,
 ) {
     val barShape = RoundedCornerShape(20.dp)
@@ -48,18 +49,12 @@ fun ControlsRow(
             .fillMaxWidth()
             .clip(barShape)
             .background(Color.White.copy(alpha = 0.06f))
-            .border(
-                width = 1.dp,
-                brush = Brush.verticalGradient(
-                    listOf(Color.White.copy(alpha = 0.15f), Color.White.copy(alpha = 0.04f))
-                ),
-                shape = barShape,
-            )
+            .border(1.dp, Color.White.copy(alpha = 0.10f), barShape)
             .padding(horizontal = 8.dp, vertical = 4.dp),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().height(56.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             SwitchButton(
@@ -71,100 +66,72 @@ fun ControlsRow(
 
             CaptureButton(onClick = onCapturePhoto)
 
-            // AI toggle — glass circle with glow when active
-            Button(
+            // AI toggle
+            ControlCircleButton(
                 onClick = onToggleAI,
-                modifier = Modifier
-                    .aspectRatio(1f)
-                    .then(
-                        if (isAIActive) Modifier.drawBehind {
-                            drawCircle(
-                                brush = Brush.radialGradient(
-                                    listOf(AppColor.Accent.copy(alpha = 0.3f), Color.Transparent),
-                                ),
-                                radius = size.maxDimension * 0.7f,
-                            )
-                        } else Modifier
-                    )
-                    .border(
-                        1.dp,
-                        Brush.linearGradient(
-                            listOf(
-                                (if (isAIActive) AppColor.Accent else Color.White).copy(alpha = 0.3f),
-                                (if (isAIActive) AppColor.Accent else Color.White).copy(alpha = 0.08f),
-                            )
-                        ),
-                        CircleShape,
-                    ),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = if (isAIActive) AppColor.Accent.copy(alpha = 0.2f) else Color.White.copy(alpha = 0.08f),
-                ),
-                shape = CircleShape,
-                contentPadding = PaddingValues(0.dp),
-            ) {
-                Icon(
-                    imageVector = Icons.Default.AutoAwesome,
-                    contentDescription = if (isAIActive) "Stop AI" else "Start AI",
-                    tint = if (isAIActive) AppColor.Accent else Color.White,
-                )
-            }
+                isActive = isAIActive,
+                activeColor = AppColor.Accent,
+                icon = Icons.Default.AutoAwesome,
+                contentDescription = if (isAIActive) "Stop AI" else "Start AI",
+            )
 
-            // Exercise guide test
-            Button(
+            // Rep counter toggle
+            ControlCircleButton(
+                onClick = onToggleRepCounter,
+                isActive = isRepCounterActive,
+                activeColor = Color(0xFF00CC6A),
+                icon = Icons.Default.FitnessCenter,
+                contentDescription = if (isRepCounterActive) "Stop Rep Counter" else "Start Rep Counter",
+            )
+
+            // Exercise guide
+            ControlCircleButton(
                 onClick = onTestExerciseGuide,
-                modifier = Modifier
-                    .aspectRatio(1f)
-                    .border(
-                        1.dp,
-                        Brush.linearGradient(
-                            listOf(AppColor.AccentBlue.copy(alpha = 0.3f), AppColor.AccentBlue.copy(alpha = 0.08f))
-                        ),
-                        CircleShape,
-                    ),
-                colors = ButtonDefaults.buttonColors(containerColor = AppColor.AccentBlue.copy(alpha = 0.15f)),
-                shape = CircleShape,
-                contentPadding = PaddingValues(0.dp),
-            ) {
-                Icon(Icons.Default.FitnessCenter, contentDescription = "Test Exercise Guide", tint = AppColor.AccentBlue)
-            }
+                isActive = false,
+                activeColor = AppColor.AccentBlue,
+                icon = Icons.Default.RepeatOne,
+                contentDescription = "Exercise Guide",
+                inactiveColor = AppColor.AccentBlue.copy(alpha = 0.7f),
+            )
 
-            // Live toggle — glass circle with glow when active
-            Button(
+            // Live toggle
+            ControlCircleButton(
                 onClick = onToggleLive,
-                modifier = Modifier
-                    .aspectRatio(1f)
-                    .then(
-                        if (isLiveActive) Modifier.drawBehind {
-                            drawCircle(
-                                brush = Brush.radialGradient(
-                                    listOf(AppColor.Error.copy(alpha = 0.3f), Color.Transparent),
-                                ),
-                                radius = size.maxDimension * 0.7f,
-                            )
-                        } else Modifier
-                    )
-                    .border(
-                        1.dp,
-                        Brush.linearGradient(
-                            listOf(
-                                (if (isLiveActive) AppColor.Error else Color.White).copy(alpha = 0.3f),
-                                (if (isLiveActive) AppColor.Error else Color.White).copy(alpha = 0.08f),
-                            )
-                        ),
-                        CircleShape,
-                    ),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = if (isLiveActive) AppColor.Error.copy(alpha = 0.2f) else Color.White.copy(alpha = 0.08f),
-                ),
-                shape = CircleShape,
-                contentPadding = PaddingValues(0.dp),
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Videocam,
-                    contentDescription = if (isLiveActive) "Stop Live" else "Start Live",
-                    tint = if (isLiveActive) AppColor.Error else Color.White,
-                )
-            }
+                isActive = isLiveActive,
+                activeColor = AppColor.Error,
+                icon = Icons.Default.Videocam,
+                contentDescription = if (isLiveActive) "Stop Live" else "Start Live",
+            )
         }
+    }
+}
+
+@Composable
+private fun ControlCircleButton(
+    onClick: () -> Unit,
+    isActive: Boolean,
+    activeColor: Color,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    contentDescription: String,
+    inactiveColor: Color = Color.White.copy(alpha = 0.7f),
+) {
+    val borderColor = if (isActive) activeColor.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.12f)
+    val bgColor = if (isActive) activeColor.copy(alpha = 0.15f) else Color.White.copy(alpha = 0.06f)
+    val iconTint = if (isActive) activeColor else inactiveColor
+
+    Button(
+        onClick = onClick,
+        modifier = Modifier
+            .aspectRatio(1f)
+            .border(1.dp, borderColor, CircleShape),
+        colors = ButtonDefaults.buttonColors(containerColor = bgColor),
+        shape = CircleShape,
+        contentPadding = PaddingValues(0.dp),
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = contentDescription,
+            tint = iconTint,
+        )
     }
 }

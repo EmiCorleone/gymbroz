@@ -53,6 +53,7 @@ fun MainAppContainer(
     wearablesViewModel: WearablesViewModel,
     onRequestWearablesPermission: suspend (Permission) -> PermissionStatus,
     onRestartOnboarding: () -> Unit = {},
+    onLogout: () -> Unit = {}
 ) {
     var currentTab by remember { mutableStateOf(BottomNavItem.Dashboard) }
     val dashboardViewModel: DashboardViewModel = viewModel()
@@ -98,6 +99,7 @@ fun MainAppContainer(
                             totalReps = dashState.totalReps,
                             onOpenSettings = { /* TODO: open settings */ },
                             onRestartOnboarding = onRestartOnboarding,
+                            onLogout = onLogout
                         )
                     }
                 }

@@ -21,6 +21,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 import java.util.concurrent.TimeUnit
+import android.graphics.Matrix
 
 data class RepCounterState(
     val active: Boolean = false,
@@ -63,6 +64,9 @@ class GymToolHandler(private val scope: CoroutineScope, private val musicService
 
     // Provide latest camera frame for exercise guide
     var latestFrame: Bitmap? = null
+
+    // Mirror selfie path from user profile (used for exercise guide generation)
+    var mirrorPhotoPath: String? = null
 
     private val httpClient = OkHttpClient.Builder()
         .readTimeout(60, TimeUnit.SECONDS)
@@ -199,12 +203,16 @@ class GymToolHandler(private val scope: CoroutineScope, private val musicService
 
     private suspend fun handleGenerateExerciseGuide(args: Map<String, Any?>): JSONObject {
         val exerciseDesc = args["exercise_description"]?.toString() ?: "exercise"
-        val frame = latestFrame
-        if (frame == null) {
-            _exerciseGuide.value = ExerciseGuideState(error = "Camera not active")
+
+        // Load mirror selfie from user profile instead of using the live camera frame
+        val profileBitmap = mirrorPhotoPath?.let { path ->
+            try { loadBitmapWithExifRotation(path) } catch (_: Exception) { null }
+        }
+        if (profileBitmap == null) {
+            _exerciseGuide.value = ExerciseGuideState(error = "No profile photo. Add one in onboarding or settings.")
             return JSONObject().apply {
                 put("success", false)
-                put("error", "Camera not active, cannot capture frame")
+                put("error", "No mirror selfie available. Ask the user to add a profile photo.")
             }
         }
 
@@ -213,8 +221,9 @@ class GymToolHandler(private val scope: CoroutineScope, private val musicService
         return withContext(Dispatchers.IO) {
             try {
                 val baos = ByteArrayOutputStream()
-                frame.compress(Bitmap.CompressFormat.JPEG, 90, baos)
+                profileBitmap.compress(Bitmap.CompressFormat.JPEG, 90, baos)
                 val imageBase64 = Base64.encodeToString(baos.toByteArray(), Base64.NO_WRAP)
+                profileBitmap.recycle()
 
                 val requestBody = JSONObject().apply {
                     put("contents", JSONArray().put(JSONObject().apply {
@@ -227,18 +236,17 @@ class GymToolHandler(private val scope: CoroutineScope, private val musicService
                                 })
                             })
                             put(JSONObject().apply {
-                                put("text", """You are a professional fitness coach and image editor.
-Look at this photo of a person near a gym machine/equipment.
+                                put("text", """Edit this image. Keep the EXACT same person, the EXACT same background, and the EXACT same environment. Do NOT change the location or setting.
 
-Generate a NEW image that shows the SAME person in the SAME location, but now performing the exercise "$exerciseDesc" with CORRECT form on the machine/equipment visible in the photo.
+Modify ONLY the person's body pose so they are performing the exercise "$exerciseDesc" with correct form.
 
-The generated image should:
-- Show proper body positioning and form for the exercise
-- Keep the same gym environment/background
-- Clearly demonstrate the correct posture and grip
-- Be realistic and helpful as a visual guide
+Requirements:
+- Keep the same person, same clothes, same background, same lighting — change NOTHING except the body position
+- Show proper form for "$exerciseDesc": correct posture, grip, stance, and body alignment
+- The result should look like a natural photo of this person doing the exercise in this same location
+- Output the image in portrait/vertical orientation
 
-Also provide a brief 1-2 sentence text description of the key form cues.""")
+Also provide a brief 1-2 sentence description of the key form cues for "$exerciseDesc".""")
                             })
                         })
                     }))
@@ -246,6 +254,9 @@ Also provide a brief 1-2 sentence text description of the key form cues.""")
                         put("responseModalities", JSONArray().apply {
                             put("TEXT")
                             put("IMAGE")
+                        })
+                        put("imageConfig", JSONObject().apply {
+                            put("aspectRatio", "9:16")
                         })
                     })
                 }
@@ -320,5 +331,26 @@ Also provide a brief 1-2 sentence text description of the key form cues.""")
                 }
             }
         }
+    }
+
+    private fun loadBitmapWithExifRotation(path: String): Bitmap? {
+        val bitmap = BitmapFactory.decodeFile(path) ?: return null
+        val rotation = try {
+            val exif = androidx.exifinterface.media.ExifInterface(path)
+            when (exif.getAttributeInt(
+                androidx.exifinterface.media.ExifInterface.TAG_ORIENTATION,
+                androidx.exifinterface.media.ExifInterface.ORIENTATION_NORMAL
+            )) {
+                androidx.exifinterface.media.ExifInterface.ORIENTATION_ROTATE_90 -> 90f
+                androidx.exifinterface.media.ExifInterface.ORIENTATION_ROTATE_180 -> 180f
+                androidx.exifinterface.media.ExifInterface.ORIENTATION_ROTATE_270 -> 270f
+                else -> 0f
+            }
+        } catch (_: Exception) { 0f }
+        if (rotation == 0f) return bitmap
+        val matrix = Matrix().apply { postRotate(rotation) }
+        val rotated = Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+        bitmap.recycle()
+        return rotated
     }
 }

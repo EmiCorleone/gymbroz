@@ -76,6 +76,11 @@ class OnboardingViewModel(application: Application) : AndroidViewModel(applicati
         _state.value = _state.value.copy(mirrorPhotoPath = path)
     }
 
+    fun onLogout() {
+        _state.value = OnboardingState()
+        _isOnboardingComplete.value = false
+    }
+
     fun saveProfile(onComplete: () -> Unit) {
         viewModelScope.launch {
             try {

@@ -1,6 +1,8 @@
 package com.meta.wearable.dat.externalsampleapps.cameraaccess.ui.profile
 
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Matrix
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -11,6 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -39,6 +42,7 @@ fun ProfileScreen(
     totalReps: Int,
     onOpenSettings: () -> Unit,
     onRestartOnboarding: () -> Unit = {},
+    onLogout: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val scrollState = rememberScrollState()
@@ -85,7 +89,7 @@ fun ProfileScreen(
             ) {
                 val photoBitmap = remember(profile?.mirrorPhotoPath) {
                     profile?.mirrorPhotoPath?.let { path ->
-                        try { BitmapFactory.decodeFile(path)?.asImageBitmap() } catch (e: Exception) { null }
+                        try { loadBitmapWithRotation(path)?.asImageBitmap() } catch (_: Exception) { null }
                     }
                 }
                 if (photoBitmap != null) {
@@ -149,6 +153,14 @@ fun ProfileScreen(
             TextButton(onClick = onRestartOnboarding, modifier = Modifier.fillMaxWidth()) {
                 Text("Restart Onboarding", fontSize = 13.sp, color = AppColor.TextMuted)
             }
+            Spacer(modifier = Modifier.height(8.dp))
+            GlassCard(onClick = onLogout) {
+                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Logout, contentDescription = null, tint = AppColor.Error, modifier = Modifier.size(20.dp))
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text("Log Out", fontSize = 16.sp, color = AppColor.Error, fontWeight = FontWeight.Medium)
+                }
+            }
             Spacer(modifier = Modifier.height(100.dp))
         }
     }
@@ -182,4 +194,25 @@ private fun ProfileInfoRow(label: String, value: String) {
         Text(label, fontSize = 14.sp, color = AppColor.TextMuted)
         Text(value, fontSize = 14.sp, color = AppColor.TextPrimary, fontWeight = FontWeight.Medium)
     }
+}
+
+private fun loadBitmapWithRotation(path: String): Bitmap? {
+    val bitmap = BitmapFactory.decodeFile(path) ?: return null
+    val rotation = try {
+        val exif = androidx.exifinterface.media.ExifInterface(path)
+        when (exif.getAttributeInt(
+            androidx.exifinterface.media.ExifInterface.TAG_ORIENTATION,
+            androidx.exifinterface.media.ExifInterface.ORIENTATION_NORMAL
+        )) {
+            androidx.exifinterface.media.ExifInterface.ORIENTATION_ROTATE_90 -> 90f
+            androidx.exifinterface.media.ExifInterface.ORIENTATION_ROTATE_180 -> 180f
+            androidx.exifinterface.media.ExifInterface.ORIENTATION_ROTATE_270 -> 270f
+            else -> 0f
+        }
+    } catch (_: Exception) { 0f }
+    if (rotation == 0f) return bitmap
+    val matrix = Matrix().apply { postRotate(rotation) }
+    val rotated = Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+    bitmap.recycle()
+    return rotated
 }

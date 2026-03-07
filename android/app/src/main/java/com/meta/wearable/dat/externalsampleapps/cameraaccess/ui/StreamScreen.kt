@@ -165,17 +165,16 @@ fun StreamScreen(
                 }
             }
 
-            // Exercise guide overlay (independent of Gemini session)
-            val guide = geminiUiState.exerciseGuide
-            if (guide.isGenerating || guide.imageBase64 != null || guide.error != null) {
-                ExerciseGuideOverlay(
-                    isGenerating = guide.isGenerating,
-                    imageBase64 = guide.imageBase64,
-                    description = guide.description,
-                    error = guide.error,
-                    onDismiss = { geminiViewModel.dismissExerciseGuide() },
+            // Rep counter overlay (works independently of Gemini)
+            if (geminiUiState.repCounter.active && !geminiUiState.isGeminiActive) {
+                RepCounterOverlay(
+                    exercise = geminiUiState.repCounter.exercise,
+                    reps = geminiUiState.repCounter.repCount,
+                    modifier = Modifier.align(Alignment.TopStart).statusBarsPadding().padding(top = 8.dp),
                 )
             }
+
+            // Exercise guide overlay is rendered outside this padded Box (see below)
 
             // Controls at bottom
             ControlsRow(
@@ -203,7 +202,21 @@ fun StreamScreen(
                     }
                 },
                 isLiveActive = webrtcUiState.isActive,
+                onToggleRepCounter = { geminiViewModel.toggleRepCounting() },
+                isRepCounterActive = geminiUiState.repCounter.active,
                 modifier = Modifier.align(Alignment.BottomCenter),
+            )
+        }
+
+        // Exercise guide overlay — fullscreen, on top of everything
+        val guide = geminiUiState.exerciseGuide
+        if (guide.isGenerating || guide.imageBase64 != null || guide.error != null) {
+            ExerciseGuideOverlay(
+                isGenerating = guide.isGenerating,
+                imageBase64 = guide.imageBase64,
+                description = guide.description,
+                error = guide.error,
+                onDismiss = { geminiViewModel.dismissExerciseGuide() },
             )
         }
     }

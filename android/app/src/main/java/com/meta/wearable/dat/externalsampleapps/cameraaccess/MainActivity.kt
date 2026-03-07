@@ -28,9 +28,12 @@ import com.meta.wearable.dat.externalsampleapps.cameraaccess.settings.SettingsMa
 import com.meta.wearable.dat.externalsampleapps.cameraaccess.ui.CameraAccessScaffold
 import com.meta.wearable.dat.externalsampleapps.cameraaccess.ui.navigation.MainAppContainer
 import com.meta.wearable.dat.externalsampleapps.cameraaccess.wearables.WearablesViewModel
+import com.meta.wearable.dat.externalsampleapps.cameraaccess.data.WorkoutRepository
 import com.meta.wearable.dat.externalsampleapps.cameraaccess.onboarding.OnboardingFlow
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import kotlin.coroutines.resume
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -103,6 +106,8 @@ class MainActivity : ComponentActivity() {
           androidx.lifecycle.viewmodel.compose.viewModel()
       val isOnboardingComplete by onboardingViewModel.isOnboardingComplete.collectAsState()
 
+      val scope = rememberCoroutineScope()
+
       when (isOnboardingComplete) {
         null -> {
           // Loading — show nothing (very brief)
@@ -117,6 +122,12 @@ class MainActivity : ComponentActivity() {
               wearablesViewModel = viewModel,
               onRequestWearablesPermission = ::requestWearablesPermission,
               onRestartOnboarding = { onboardingViewModel.restartOnboarding() },
+              onLogout = {
+                scope.launch {
+                  WorkoutRepository(application).clearProfile()
+                  onboardingViewModel.onLogout()
+                }
+              },
           )
         }
       }
