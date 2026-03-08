@@ -68,6 +68,8 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
     private val guideDao = db.exerciseGuideDao()
     private val planDao = db.cachedWorkoutPlanDao()
 
+    private val guideImagesDir = java.io.File(application.filesDir, "exercise_guides").also { it.mkdirs() }
+
     init {
         // Load cached workout plan and exercise guide images from DB on startup
         viewModelScope.launch {
@@ -87,18 +89,31 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
                 }
             }
 
-            // Load cached exercise guide images
-            val cached = withContext(Dispatchers.IO) { guideDao.getAll() }
+            // Load cached exercise guide images (paths only from DB, read files on demand)
+            val cached = withContext(Dispatchers.IO) {
+                try {
+                    guideDao.getAll()
+                } catch (e: Exception) {
+                    Log.e("HealthViewModel", "Failed to load exercise guides from DB: ${e.message}")
+                    emptyList()
+                }
+            }
             if (cached.isNotEmpty()) {
-                val guides = cached.associate { img ->
-                    img.exerciseName to ExerciseGuideUiState(
-                        imageBase64 = img.fullBodyBase64,
-                        closeUpImageBase64 = img.closeUpBase64,
-                        exerciseName = img.exerciseName,
-                    )
+                val guides = withContext(Dispatchers.IO) {
+                    cached.mapNotNull { img ->
+                        val fullBody = img.fullBodyPath?.let { readFileAsBase64(it) }
+                        val closeUp = img.closeUpPath?.let { readFileAsBase64(it) }
+                        if (fullBody != null || closeUp != null) {
+                            img.exerciseName to ExerciseGuideUiState(
+                                imageBase64 = fullBody,
+                                closeUpImageBase64 = closeUp,
+                                exerciseName = img.exerciseName,
+                            )
+                        } else null
+                    }.toMap()
                 }
                 _uiState.update { it.copy(exerciseGuides = it.exerciseGuides + guides) }
-                Log.d("HealthViewModel", "Loaded ${cached.size} cached exercise guides from DB")
+                Log.d("HealthViewModel", "Loaded ${guides.size} cached exercise guides from disk")
             }
         }
     }
@@ -308,16 +323,27 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
                 }
                 Log.d("HealthViewModel", "[$index] $name done — fullBody=${fullBodyBase64 != null}, closeUp=${closeUpBase64 != null}")
 
-                // Save to DB for persistence
+                // Save images to disk and paths to DB for persistence
                 if (fullBodyBase64 != null || closeUpBase64 != null) {
                     withContext(Dispatchers.IO) {
+                        val safeName = name.replace(Regex("[^a-zA-Z0-9]"), "_")
+                        val fullBodyPath = fullBodyBase64?.let { base64 ->
+                            val file = java.io.File(guideImagesDir, "${safeName}_full.jpg")
+                            file.writeBytes(Base64.decode(base64, Base64.DEFAULT))
+                            file.absolutePath
+                        }
+                        val closeUpPath = closeUpBase64?.let { base64 ->
+                            val file = java.io.File(guideImagesDir, "${safeName}_closeup.jpg")
+                            file.writeBytes(Base64.decode(base64, Base64.DEFAULT))
+                            file.absolutePath
+                        }
                         guideDao.upsert(ExerciseGuideImage(
                             exerciseName = name,
-                            fullBodyBase64 = fullBodyBase64,
-                            closeUpBase64 = closeUpBase64,
+                            fullBodyPath = fullBodyPath,
+                            closeUpPath = closeUpPath,
                         ))
                     }
-                    Log.d("HealthViewModel", "[$index] Saved $name to DB")
+                    Log.d("HealthViewModel", "[$index] Saved $name to disk+DB")
                 }
             }
             Log.d("HealthViewModel", "generateAllExerciseGuides COMPLETE — all ${exercises.size} done")
@@ -595,6 +621,16 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
             )
         } catch (e: Exception) {
             Log.e("HealthViewModel", "Failed to deserialize workout plan: ${e.message}")
+            null
+        }
+    }
+
+    private fun readFileAsBase64(path: String): String? {
+        return try {
+            val file = java.io.File(path)
+            if (file.exists()) Base64.encodeToString(file.readBytes(), Base64.NO_WRAP) else null
+        } catch (e: Exception) {
+            Log.e("HealthViewModel", "Failed to read file $path: ${e.message}")
             null
         }
     }

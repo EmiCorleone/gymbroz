@@ -7,7 +7,7 @@ import androidx.room.PrimaryKey
 data class ExerciseGuideImage(
     @PrimaryKey
     val exerciseName: String,
-    val fullBodyBase64: String? = null,
-    val closeUpBase64: String? = null,
+    val fullBodyPath: String? = null,
+    val closeUpPath: String? = null,
     val createdAt: Long = System.currentTimeMillis()
 )
