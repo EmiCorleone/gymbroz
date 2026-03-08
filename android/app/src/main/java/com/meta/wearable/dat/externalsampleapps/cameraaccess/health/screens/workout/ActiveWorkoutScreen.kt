@@ -2,6 +2,7 @@ package com.meta.wearable.dat.externalsampleapps.cameraaccess.health.screens.wor
 
 import android.graphics.BitmapFactory
 import android.util.Base64
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -68,6 +69,11 @@ fun ActiveWorkoutScreen(
     val currentExercise = workout.exercises[currentExerciseIndex]
     val totalExercises = workout.exercises.size
     val guide = exerciseGuides[currentExercise.name]
+
+    Log.d("ActiveWorkoutScreen", "exercise=$currentExerciseIndex '${currentExercise.name}' " +
+        "guide=${guide != null} isGenerating=${guide?.isGenerating} " +
+        "hasFullBody=${guide?.imageBase64 != null} hasCloseUp=${guide?.closeUpImageBase64 != null} " +
+        "guidesMapSize=${exerciseGuides.size} guidesKeys=${exerciseGuides.keys.take(5)}")
 
     LaunchedEffect(currentExerciseIndex) { currentSet = 1 }
 
