@@ -77,7 +77,9 @@ class WearablesViewModel: ObservableObject {
     }
 
     func handleURL(_ url: URL) {
-        Wearables.shared.handleUrl(url)
+        Task {
+            try? await wearables.handleUrl(url)
+        }
     }
 
     func showError(_ message: String) {

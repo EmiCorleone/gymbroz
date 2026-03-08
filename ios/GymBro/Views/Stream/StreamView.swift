@@ -55,7 +55,10 @@ struct StreamView: View {
             }
         }
         .onOpenURL { url in wearablesViewModel.handleURL(url) }
-        .alert("Error", isPresented: $streamViewModel.wearablesManager.showError) {
+        .alert("Error", isPresented: Binding(
+            get: { streamViewModel.wearablesManager.showError },
+            set: { streamViewModel.wearablesManager.showError = $0 }
+        )) {
             Button("OK") { streamViewModel.wearablesManager.dismissError() }
         } message: { Text(streamViewModel.wearablesManager.errorMessage) }
     }

@@ -7,38 +7,39 @@ class DebugMenuViewModel: ObservableObject {
     @Published var showDebugMenu = false
     let mockDeviceKitViewModel: MockDeviceKitViewModel
 
-    init(mockDeviceKit: MockDeviceKit) {
+    init(mockDeviceKit: any MockDeviceKitInterface) {
         self.mockDeviceKitViewModel = MockDeviceKitViewModel(mockDeviceKit: mockDeviceKit)
     }
 }
 
 @MainActor
 class MockDeviceKitViewModel: ObservableObject {
-    @Published var pairedDevices: [MockDevice] = []
-    private let mockDeviceKit: MockDeviceKit
+    @Published var pairedDevices: [any MockDevice] = []
+    private let mockDeviceKit: any MockDeviceKitInterface
 
-    init(mockDeviceKit: MockDeviceKit) {
+    init(mockDeviceKit: any MockDeviceKitInterface) {
         self.mockDeviceKit = mockDeviceKit
         self.pairedDevices = mockDeviceKit.pairedDevices
     }
 
     func pairDevice() {
-        let device = mockDeviceKit.createDevice()
-        mockDeviceKit.pair(device)
+        let device = mockDeviceKit.pairRaybanMeta()
+        device.powerOn()
+        device.don()
         pairedDevices = mockDeviceKit.pairedDevices
     }
 
-    func unpairDevice(_ device: MockDevice) {
-        mockDeviceKit.unpair(device)
+    func unpairDevice(_ device: any MockDevice) {
+        mockDeviceKit.unpairDevice(device)
         pairedDevices = mockDeviceKit.pairedDevices
     }
 
-    func connectDevice(_ device: MockDevice) {
-        device.connect()
+    func connectDevice(_ device: any MockDevice) {
+        device.powerOn()
     }
 
-    func disconnectDevice(_ device: MockDevice) {
-        device.disconnect()
+    func disconnectDevice(_ device: any MockDevice) {
+        device.powerOff()
     }
 }
 #endif

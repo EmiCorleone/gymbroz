@@ -10,7 +10,9 @@ struct GeminiToolCall {
     let functionCalls: [GeminiFunctionCall]
 
     static func parse(from json: [String: Any]) -> GeminiToolCall? {
-        guard let parts = (json["serverContent"] as? [String: Any])?["modelTurn"]?["parts"] as? [[String: Any]] else {
+        guard let serverContent = json["serverContent"] as? [String: Any],
+              let modelTurn = serverContent["modelTurn"] as? [String: Any],
+              let parts = modelTurn["parts"] as? [[String: Any]] else {
             // Try toolCall format
             if let toolCallParts = (json["toolCall"] as? [String: Any])?["functionCalls"] as? [[String: Any]] {
                 let calls = toolCallParts.compactMap { part -> GeminiFunctionCall? in

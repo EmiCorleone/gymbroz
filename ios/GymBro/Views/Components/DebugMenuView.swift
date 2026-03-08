@@ -31,11 +31,11 @@ struct MockDeviceKitView: View {
         NavigationView {
             List {
                 Section("Mock Devices") {
-                    ForEach(viewModel.pairedDevices, id: \.self) { device in
+                    ForEach(0..<viewModel.pairedDevices.count, id: \.self) { index in
                         HStack {
-                            Text("Mock Device")
+                            Text("Mock Device \(index + 1)")
                             Spacer()
-                            Button("Connect") { viewModel.connectDevice(device) }
+                            Button("Connect") { viewModel.connectDevice(viewModel.pairedDevices[index]) }
                                 .buttonStyle(.bordered)
                         }
                     }
