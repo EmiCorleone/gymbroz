@@ -1,0 +1,772 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0652B20E6FC356E4D9076F6A /* MWDATMockDevice in Frameworks */ = {isa = PBXBuildFile; productRef = 97E63DFDEA9A030F7F063CDE /* MWDATMockDevice */; };
+		1B48DBEC4048FC6DEAE8C119 /* ExerciseSet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C94B8D18CD964E26834B729 /* ExerciseSet.swift */; };
+		1F826545AF1E1879EFA24820 /* GymBroTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20A3A417462175BBB0CC0853 /* GymBroTests.swift */; };
+		20DC115F8ACDD345A6A2E84A /* StreamingManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F63BFFD6EEB1C305BD0B6AD8 /* StreamingManager.swift */; };
+		276D47B49DD0EF826DD1E137 /* AnimatedMeshGradient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F762C63024DE4FBD3AC7DAB /* AnimatedMeshGradient.swift */; };
+		28906B715F3E77281CCFA286 /* GeminiOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5423D0807F68EBCC68A40BD7 /* GeminiOverlayView.swift */; };
+		28D0C0A5BCD240A3CD664874 /* Secrets.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3A06457A49386D7E29D0E6F /* Secrets.swift */; };
+		2C7B82B6FF3A450FBC1ABB4B /* SettingsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2DD13FCDD607A8F9823E4AC /* SettingsManager.swift */; };
+		33719931EDDCBC1EA3815B76 /* StreamViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E13E671BE5D7EB0BFE4FF1A /* StreamViewModel.swift */; };
+		34F55F4065035D2C1FB77953 /* ToolCallModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F42EDF2DA10EA5554EB1A25 /* ToolCallModels.swift */; };
+		373C2F2F3F1EC14E75AAFD0F /* OnboardingFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = D16B6532D0F961B12B499966 /* OnboardingFlow.swift */; };
+		42FEBBF5584774E85AD2B07B /* GeminiSessionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 828DF6E0AD038A0100598E48 /* GeminiSessionViewModel.swift */; };
+		464682BD583C215B223F8ACB /* GymBroApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36A84C8AAE432EE9627B2BF4 /* GymBroApp.swift */; };
+		466504D7D20DE8636BB7C5BE /* WorkoutSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE055EB549B500E929DED76A /* WorkoutSession.swift */; };
+		4C18B2F0C8CD2854C3CFA396 /* PoseDetectionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F159F71E0AA4AC92C032CD5E /* PoseDetectionManager.swift */; };
+		4D0A3B67E2B929CE432B85F1 /* GlassModifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6ABB5D886FAB9B0B564DDCD5 /* GlassModifiers.swift */; };
+		53630029AFDCA02EABB6FE73 /* CircleButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D29916C9773F3659105679F /* CircleButton.swift */; };
+		5F870A0C5778522E46565E4C /* MockDeviceKitViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8624B3A7E35911DAEEF79C4 /* MockDeviceKitViewModel.swift */; };
+		64789A2D54F2DABF80321384 /* GymBroTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = F62E7191944C45D72001F70B /* GymBroTheme.swift */; };
+		6DD635AF02D5F6EB29D6CC38 /* PhoneCameraManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CEC487F6712DFA14FA8C2D2 /* PhoneCameraManager.swift */; };
+		75E3AB98EEFA71360AFD9D3A /* GeminiConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A3C4EE137F1CE541931E6D7 /* GeminiConfig.swift */; };
+		7BDA6DF53292AA6F35D431CC /* MWDATCamera in Frameworks */ = {isa = PBXBuildFile; productRef = BC04903EA56C4A6B0FE8A6D0 /* MWDATCamera */; };
+		90C1233BC2AB51ECB1960106 /* WearablesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F09DD5A8201270A77B6634A1 /* WearablesViewModel.swift */; };
+		9517D0FC43CB68946280AA30 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 511039FFCC8814D71869692D /* DashboardView.swift */; };
+		AC0E05227F3ECEED36300C2E /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4A8149C3FF96A497253BED8 /* ProfileView.swift */; };
+		B484D37310886D001EA1DC5A /* MWDATCore in Frameworks */ = {isa = PBXBuildFile; productRef = 610AEF5F4E2D763F3AC345F9 /* MWDATCore */; };
+		B5F5FD37F876265C731CD11F /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FB52F7E1B582B716FD4A46F /* MainTabView.swift */; };
+		BDB6044BCFB52BF77130A265 /* GymToolHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6A89895DD34B957E76B6566 /* GymToolHandler.swift */; };
+		BEF1F44871CB0E23E75097C3 /* WorkoutRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75173D8D4D6CB6ECE8955239 /* WorkoutRepository.swift */; };
+		C10A88001E8A682B7C518C93 /* GymBroSupabaseClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A610E46BA6AEDB1876BA7A80 /* GymBroSupabaseClient.swift */; };
+		C303491F8DA8EB1482F70F93 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 5F0B24793216F6AB7DDF461E /* Supabase */; };
+		C66A1179503FB009DC838303 /* OnboardingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6251D01CB4B49BFEB10B6E2 /* OnboardingViewModel.swift */; };
+		CB73223D0570F1A69881465D /* WearablesManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 599F404FF17671ABBAFB5376 /* WearablesManager.swift */; };
+		D25D5C30FE87E77041531396 /* AppColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE48D5E87003E07B96D40E0B /* AppColor.swift */; };
+		D3823D0A70F13FDFEEF1E52E /* DashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 950BDB7FFACE03F0CE851A2D /* DashboardViewModel.swift */; };
+		D65026CF43815201C4748F4F /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 633D20A8B3121D090C20DD63 /* SettingsView.swift */; };
+		D7ECE7C0FF731BB87B68ADBE /* UserProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66E7D606FBE4091F047F551A /* UserProfile.swift */; };
+		E02B53929FF7B5C955586998 /* AudioManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1855559FB8FC159FEF74973F /* AudioManager.swift */; };
+		F18BABA2833BDA9DF5604454 /* GeminiLiveService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44DFF6290A541E308F647694 /* GeminiLiveService.swift */; };
+		F2C27E0235E2AB8BDDCF70C0 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C31845532C88795A4A1F481A /* Assets.xcassets */; };
+		F48F1B964400DA547D883483 /* DebugMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0013A9C3C2125E3CB0105C7C /* DebugMenuView.swift */; };
+		FAB4A7E0410EFC552DFA7B4C /* ControlsRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EEB445268F7B1DA9130F91A /* ControlsRow.swift */; };
+		FB351B5D76DB0D227CEA7527 /* StreamView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAFC9D44F274490A633054CB /* StreamView.swift */; };
+		FED954E2159D8EA46A069EF1 /* PovRepCounter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81931466153E52628A13A39D /* PovRepCounter.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		3A186EDE6C9210CDD0D7B9CA /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 81AF65F84AF2CDDD90C220B4 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 880F96BE0B0D0E044B56C066;
+			remoteInfo = GymBro;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		0013A9C3C2125E3CB0105C7C /* DebugMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugMenuView.swift; sourceTree = "<group>"; };
+		0EEB445268F7B1DA9130F91A /* ControlsRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControlsRow.swift; sourceTree = "<group>"; };
+		1514D779B06CECC3171ED56E /* GymBroTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = GymBroTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		1855559FB8FC159FEF74973F /* AudioManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioManager.swift; sourceTree = "<group>"; };
+		20A3A417462175BBB0CC0853 /* GymBroTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GymBroTests.swift; sourceTree = "<group>"; };
+		2A3C4EE137F1CE541931E6D7 /* GeminiConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeminiConfig.swift; sourceTree = "<group>"; };
+		2F42EDF2DA10EA5554EB1A25 /* ToolCallModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolCallModels.swift; sourceTree = "<group>"; };
+		36A84C8AAE432EE9627B2BF4 /* GymBroApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GymBroApp.swift; sourceTree = "<group>"; };
+		3E13E671BE5D7EB0BFE4FF1A /* StreamViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamViewModel.swift; sourceTree = "<group>"; };
+		44DFF6290A541E308F647694 /* GeminiLiveService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeminiLiveService.swift; sourceTree = "<group>"; };
+		4CEC487F6712DFA14FA8C2D2 /* PhoneCameraManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneCameraManager.swift; sourceTree = "<group>"; };
+		511039FFCC8814D71869692D /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
+		5423D0807F68EBCC68A40BD7 /* GeminiOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeminiOverlayView.swift; sourceTree = "<group>"; };
+		599F404FF17671ABBAFB5376 /* WearablesManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WearablesManager.swift; sourceTree = "<group>"; };
+		633D20A8B3121D090C20DD63 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		66E7D606FBE4091F047F551A /* UserProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfile.swift; sourceTree = "<group>"; };
+		6ABB5D886FAB9B0B564DDCD5 /* GlassModifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassModifiers.swift; sourceTree = "<group>"; };
+		6D29916C9773F3659105679F /* CircleButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CircleButton.swift; sourceTree = "<group>"; };
+		6F762C63024DE4FBD3AC7DAB /* AnimatedMeshGradient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimatedMeshGradient.swift; sourceTree = "<group>"; };
+		75173D8D4D6CB6ECE8955239 /* WorkoutRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutRepository.swift; sourceTree = "<group>"; };
+		81931466153E52628A13A39D /* PovRepCounter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PovRepCounter.swift; sourceTree = "<group>"; };
+		828DF6E0AD038A0100598E48 /* GeminiSessionViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeminiSessionViewModel.swift; sourceTree = "<group>"; };
+		8C94B8D18CD964E26834B729 /* ExerciseSet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExerciseSet.swift; sourceTree = "<group>"; };
+		8FB52F7E1B582B716FD4A46F /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
+		90052BCC0E3A87460DB29661 /* GymBro.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = GymBro.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		950BDB7FFACE03F0CE851A2D /* DashboardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardViewModel.swift; sourceTree = "<group>"; };
+		A610E46BA6AEDB1876BA7A80 /* GymBroSupabaseClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GymBroSupabaseClient.swift; sourceTree = "<group>"; };
+		A8624B3A7E35911DAEEF79C4 /* MockDeviceKitViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockDeviceKitViewModel.swift; sourceTree = "<group>"; };
+		AAFC9D44F274490A633054CB /* StreamView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamView.swift; sourceTree = "<group>"; };
+		AE48D5E87003E07B96D40E0B /* AppColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppColor.swift; sourceTree = "<group>"; };
+		B2DD13FCDD607A8F9823E4AC /* SettingsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsManager.swift; sourceTree = "<group>"; };
+		BE055EB549B500E929DED76A /* WorkoutSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutSession.swift; sourceTree = "<group>"; };
+		C31845532C88795A4A1F481A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		D16B6532D0F961B12B499966 /* OnboardingFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingFlow.swift; sourceTree = "<group>"; };
+		D6251D01CB4B49BFEB10B6E2 /* OnboardingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingViewModel.swift; sourceTree = "<group>"; };
+		E6A89895DD34B957E76B6566 /* GymToolHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GymToolHandler.swift; sourceTree = "<group>"; };
+		F09DD5A8201270A77B6634A1 /* WearablesViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WearablesViewModel.swift; sourceTree = "<group>"; };
+		F159F71E0AA4AC92C032CD5E /* PoseDetectionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PoseDetectionManager.swift; sourceTree = "<group>"; };
+		F3A06457A49386D7E29D0E6F /* Secrets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Secrets.swift; sourceTree = "<group>"; };
+		F4A8149C3FF96A497253BED8 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
+		F62E7191944C45D72001F70B /* GymBroTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GymBroTheme.swift; sourceTree = "<group>"; };
+		F63BFFD6EEB1C305BD0B6AD8 /* StreamingManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamingManager.swift; sourceTree = "<group>"; };
+		FE02FF2B2F3EEDA23EF721CA /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		3434BED229ECB78B62959A6C /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B484D37310886D001EA1DC5A /* MWDATCore in Frameworks */,
+				7BDA6DF53292AA6F35D431CC /* MWDATCamera in Frameworks */,
+				0652B20E6FC356E4D9076F6A /* MWDATMockDevice in Frameworks */,
+				C303491F8DA8EB1482F70F93 /* Supabase in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		04824EA70066C7A37CCA329A /* GymBroTests */ = {
+			isa = PBXGroup;
+			children = (
+				20A3A417462175BBB0CC0853 /* GymBroTests.swift */,
+			);
+			path = GymBroTests;
+			sourceTree = "<group>";
+		};
+		0DCBC2225F9C5FA3947357E7 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				90052BCC0E3A87460DB29661 /* GymBro.app */,
+				1514D779B06CECC3171ED56E /* GymBroTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		1808704D6FEE27711D885D58 /* Theme */ = {
+			isa = PBXGroup;
+			children = (
+				AE48D5E87003E07B96D40E0B /* AppColor.swift */,
+				F62E7191944C45D72001F70B /* GymBroTheme.swift */,
+			);
+			path = Theme;
+			sourceTree = "<group>";
+		};
+		1B261DED563DDEA62503766E /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				6A6D40DD2285AE4CA997FAC2 /* Camera */,
+				36F5CD2BE7630C0CCF1CED0A /* Gemini */,
+				769F2DC7673C3B9B14BAC1FE /* PoseDetection */,
+				C27B6779E3506D6A95A8176C /* Streaming */,
+				E01263C15DA7948482DE0ECB /* Wearables */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		29B5D283C48C82AB6A7479DE = {
+			isa = PBXGroup;
+			children = (
+				FCC2F96ECFAE62138466F407 /* GymBro */,
+				04824EA70066C7A37CCA329A /* GymBroTests */,
+				0DCBC2225F9C5FA3947357E7 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		2BD306D2217AE41211F975BE /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				633D20A8B3121D090C20DD63 /* SettingsView.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		34C1A052DD284A8157255DBF /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				8C94B8D18CD964E26834B729 /* ExerciseSet.swift */,
+				66E7D606FBE4091F047F551A /* UserProfile.swift */,
+				BE055EB549B500E929DED76A /* WorkoutSession.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		36F5CD2BE7630C0CCF1CED0A /* Gemini */ = {
+			isa = PBXGroup;
+			children = (
+				1855559FB8FC159FEF74973F /* AudioManager.swift */,
+				2A3C4EE137F1CE541931E6D7 /* GeminiConfig.swift */,
+				44DFF6290A541E308F647694 /* GeminiLiveService.swift */,
+			);
+			path = Gemini;
+			sourceTree = "<group>";
+		};
+		3E6296CDE4F6C3415146ED99 /* Navigation */ = {
+			isa = PBXGroup;
+			children = (
+				8FB52F7E1B582B716FD4A46F /* MainTabView.swift */,
+			);
+			path = Navigation;
+			sourceTree = "<group>";
+		};
+		6A6D40DD2285AE4CA997FAC2 /* Camera */ = {
+			isa = PBXGroup;
+			children = (
+				4CEC487F6712DFA14FA8C2D2 /* PhoneCameraManager.swift */,
+			);
+			path = Camera;
+			sourceTree = "<group>";
+		};
+		75F3E1CE5761C00CC4E31DD8 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				B703CB411553F1153C954E4C /* Components */,
+				B394BC44B7700F8123E50D1D /* Dashboard */,
+				3E6296CDE4F6C3415146ED99 /* Navigation */,
+				F2A10312840C0F2C4A127EEF /* Onboarding */,
+				CBD6C22FC477D9703CAA9B71 /* Profile */,
+				2BD306D2217AE41211F975BE /* Settings */,
+				99DB9F08796C8EFF541FF19B /* Stream */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		769F2DC7673C3B9B14BAC1FE /* PoseDetection */ = {
+			isa = PBXGroup;
+			children = (
+				E6A89895DD34B957E76B6566 /* GymToolHandler.swift */,
+				F159F71E0AA4AC92C032CD5E /* PoseDetectionManager.swift */,
+				81931466153E52628A13A39D /* PovRepCounter.swift */,
+				2F42EDF2DA10EA5554EB1A25 /* ToolCallModels.swift */,
+			);
+			path = PoseDetection;
+			sourceTree = "<group>";
+		};
+		927EEFADC64FD48C146AD05A /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				950BDB7FFACE03F0CE851A2D /* DashboardViewModel.swift */,
+				828DF6E0AD038A0100598E48 /* GeminiSessionViewModel.swift */,
+				A8624B3A7E35911DAEEF79C4 /* MockDeviceKitViewModel.swift */,
+				D6251D01CB4B49BFEB10B6E2 /* OnboardingViewModel.swift */,
+				3E13E671BE5D7EB0BFE4FF1A /* StreamViewModel.swift */,
+				F09DD5A8201270A77B6634A1 /* WearablesViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		99DB9F08796C8EFF541FF19B /* Stream */ = {
+			isa = PBXGroup;
+			children = (
+				0EEB445268F7B1DA9130F91A /* ControlsRow.swift */,
+				5423D0807F68EBCC68A40BD7 /* GeminiOverlayView.swift */,
+				AAFC9D44F274490A633054CB /* StreamView.swift */,
+			);
+			path = Stream;
+			sourceTree = "<group>";
+		};
+		B394BC44B7700F8123E50D1D /* Dashboard */ = {
+			isa = PBXGroup;
+			children = (
+				511039FFCC8814D71869692D /* DashboardView.swift */,
+			);
+			path = Dashboard;
+			sourceTree = "<group>";
+		};
+		B703CB411553F1153C954E4C /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				6F762C63024DE4FBD3AC7DAB /* AnimatedMeshGradient.swift */,
+				6D29916C9773F3659105679F /* CircleButton.swift */,
+				0013A9C3C2125E3CB0105C7C /* DebugMenuView.swift */,
+				6ABB5D886FAB9B0B564DDCD5 /* GlassModifiers.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		B83BCC1013EA92F11AACA694 /* Data */ = {
+			isa = PBXGroup;
+			children = (
+				A610E46BA6AEDB1876BA7A80 /* GymBroSupabaseClient.swift */,
+				B2DD13FCDD607A8F9823E4AC /* SettingsManager.swift */,
+				75173D8D4D6CB6ECE8955239 /* WorkoutRepository.swift */,
+				34C1A052DD284A8157255DBF /* Models */,
+			);
+			path = Data;
+			sourceTree = "<group>";
+		};
+		C27B6779E3506D6A95A8176C /* Streaming */ = {
+			isa = PBXGroup;
+			children = (
+				F63BFFD6EEB1C305BD0B6AD8 /* StreamingManager.swift */,
+			);
+			path = Streaming;
+			sourceTree = "<group>";
+		};
+		CBD6C22FC477D9703CAA9B71 /* Profile */ = {
+			isa = PBXGroup;
+			children = (
+				F4A8149C3FF96A497253BED8 /* ProfileView.swift */,
+			);
+			path = Profile;
+			sourceTree = "<group>";
+		};
+		E01263C15DA7948482DE0ECB /* Wearables */ = {
+			isa = PBXGroup;
+			children = (
+				599F404FF17671ABBAFB5376 /* WearablesManager.swift */,
+			);
+			path = Wearables;
+			sourceTree = "<group>";
+		};
+		F2A10312840C0F2C4A127EEF /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				D16B6532D0F961B12B499966 /* OnboardingFlow.swift */,
+			);
+			path = Onboarding;
+			sourceTree = "<group>";
+		};
+		FCC2F96ECFAE62138466F407 /* GymBro */ = {
+			isa = PBXGroup;
+			children = (
+				C31845532C88795A4A1F481A /* Assets.xcassets */,
+				36A84C8AAE432EE9627B2BF4 /* GymBroApp.swift */,
+				FE02FF2B2F3EEDA23EF721CA /* Info.plist */,
+				F3A06457A49386D7E29D0E6F /* Secrets.swift */,
+				B83BCC1013EA92F11AACA694 /* Data */,
+				1B261DED563DDEA62503766E /* Services */,
+				1808704D6FEE27711D885D58 /* Theme */,
+				927EEFADC64FD48C146AD05A /* ViewModels */,
+				75F3E1CE5761C00CC4E31DD8 /* Views */,
+			);
+			path = GymBro;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		4CDF055B2BD561398E1EEA33 /* GymBroTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2E42855E9D909999D3B57511 /* Build configuration list for PBXNativeTarget "GymBroTests" */;
+			buildPhases = (
+				A261EB85B8994C5C81990D74 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				90AA0219BDFCAFF6526D0DDC /* PBXTargetDependency */,
+			);
+			name = GymBroTests;
+			packageProductDependencies = (
+			);
+			productName = GymBroTests;
+			productReference = 1514D779B06CECC3171ED56E /* GymBroTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		880F96BE0B0D0E044B56C066 /* GymBro */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A2FE653BAF26F2153B50AC2F /* Build configuration list for PBXNativeTarget "GymBro" */;
+			buildPhases = (
+				2829CBF22D8A2F1608698F54 /* Sources */,
+				1109C5FA3E866524EB5088CC /* Resources */,
+				3434BED229ECB78B62959A6C /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = GymBro;
+			packageProductDependencies = (
+				610AEF5F4E2D763F3AC345F9 /* MWDATCore */,
+				BC04903EA56C4A6B0FE8A6D0 /* MWDATCamera */,
+				97E63DFDEA9A030F7F063CDE /* MWDATMockDevice */,
+				5F0B24793216F6AB7DDF461E /* Supabase */,
+			);
+			productName = GymBro;
+			productReference = 90052BCC0E3A87460DB29661 /* GymBro.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		81AF65F84AF2CDDD90C220B4 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					4CDF055B2BD561398E1EEA33 = {
+						DevelopmentTeam = "";
+					};
+					880F96BE0B0D0E044B56C066 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 4E83B702DC1C96F015BDE5D1 /* Build configuration list for PBXProject "GymBro" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 29B5D283C48C82AB6A7479DE;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				02B229AC443A242FB1D287E0 /* XCRemoteSwiftPackageReference "meta-wearables-dat-ios" */,
+				BA08829B9B4F2374379BA144 /* XCRemoteSwiftPackageReference "supabase-swift" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 0DCBC2225F9C5FA3947357E7 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				880F96BE0B0D0E044B56C066 /* GymBro */,
+				4CDF055B2BD561398E1EEA33 /* GymBroTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		1109C5FA3E866524EB5088CC /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F2C27E0235E2AB8BDDCF70C0 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		2829CBF22D8A2F1608698F54 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				276D47B49DD0EF826DD1E137 /* AnimatedMeshGradient.swift in Sources */,
+				D25D5C30FE87E77041531396 /* AppColor.swift in Sources */,
+				E02B53929FF7B5C955586998 /* AudioManager.swift in Sources */,
+				53630029AFDCA02EABB6FE73 /* CircleButton.swift in Sources */,
+				FAB4A7E0410EFC552DFA7B4C /* ControlsRow.swift in Sources */,
+				9517D0FC43CB68946280AA30 /* DashboardView.swift in Sources */,
+				D3823D0A70F13FDFEEF1E52E /* DashboardViewModel.swift in Sources */,
+				F48F1B964400DA547D883483 /* DebugMenuView.swift in Sources */,
+				1B48DBEC4048FC6DEAE8C119 /* ExerciseSet.swift in Sources */,
+				75E3AB98EEFA71360AFD9D3A /* GeminiConfig.swift in Sources */,
+				F18BABA2833BDA9DF5604454 /* GeminiLiveService.swift in Sources */,
+				28906B715F3E77281CCFA286 /* GeminiOverlayView.swift in Sources */,
+				42FEBBF5584774E85AD2B07B /* GeminiSessionViewModel.swift in Sources */,
+				4D0A3B67E2B929CE432B85F1 /* GlassModifiers.swift in Sources */,
+				464682BD583C215B223F8ACB /* GymBroApp.swift in Sources */,
+				C10A88001E8A682B7C518C93 /* GymBroSupabaseClient.swift in Sources */,
+				64789A2D54F2DABF80321384 /* GymBroTheme.swift in Sources */,
+				BDB6044BCFB52BF77130A265 /* GymToolHandler.swift in Sources */,
+				B5F5FD37F876265C731CD11F /* MainTabView.swift in Sources */,
+				5F870A0C5778522E46565E4C /* MockDeviceKitViewModel.swift in Sources */,
+				373C2F2F3F1EC14E75AAFD0F /* OnboardingFlow.swift in Sources */,
+				C66A1179503FB009DC838303 /* OnboardingViewModel.swift in Sources */,
+				6DD635AF02D5F6EB29D6CC38 /* PhoneCameraManager.swift in Sources */,
+				4C18B2F0C8CD2854C3CFA396 /* PoseDetectionManager.swift in Sources */,
+				FED954E2159D8EA46A069EF1 /* PovRepCounter.swift in Sources */,
+				AC0E05227F3ECEED36300C2E /* ProfileView.swift in Sources */,
+				28D0C0A5BCD240A3CD664874 /* Secrets.swift in Sources */,
+				2C7B82B6FF3A450FBC1ABB4B /* SettingsManager.swift in Sources */,
+				D65026CF43815201C4748F4F /* SettingsView.swift in Sources */,
+				FB351B5D76DB0D227CEA7527 /* StreamView.swift in Sources */,
+				33719931EDDCBC1EA3815B76 /* StreamViewModel.swift in Sources */,
+				20DC115F8ACDD345A6A2E84A /* StreamingManager.swift in Sources */,
+				34F55F4065035D2C1FB77953 /* ToolCallModels.swift in Sources */,
+				D7ECE7C0FF731BB87B68ADBE /* UserProfile.swift in Sources */,
+				CB73223D0570F1A69881465D /* WearablesManager.swift in Sources */,
+				90C1233BC2AB51ECB1960106 /* WearablesViewModel.swift in Sources */,
+				BEF1F44871CB0E23E75097C3 /* WorkoutRepository.swift in Sources */,
+				466504D7D20DE8636BB7C5BE /* WorkoutSession.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A261EB85B8994C5C81990D74 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1F826545AF1E1879EFA24820 /* GymBroTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		90AA0219BDFCAFF6526D0DDC /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 880F96BE0B0D0E044B56C066 /* GymBro */;
+			targetProxy = 3A186EDE6C9210CDD0D7B9CA /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		032F31A760A01EED3667D97C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.9;
+			};
+			name = Debug;
+		};
+		24918BE2D0F03E7CBAE7F13B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				INFOPLIST_FILE = GymBro/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.gymbro.ios;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		59AEEE5B9B3F0225E6DA78DB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.gymbro.GymBroTests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/GymBro.app/GymBro";
+			};
+			name = Debug;
+		};
+		DE977F642EB8DBB75805CB64 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				INFOPLIST_FILE = GymBro/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.gymbro.ios;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		EBC364C2D9330AF2E7F239E8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.9;
+			};
+			name = Release;
+		};
+		F9A4880228347AB718B33280 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.gymbro.GymBroTests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/GymBro.app/GymBro";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		2E42855E9D909999D3B57511 /* Build configuration list for PBXNativeTarget "GymBroTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				59AEEE5B9B3F0225E6DA78DB /* Debug */,
+				F9A4880228347AB718B33280 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		4E83B702DC1C96F015BDE5D1 /* Build configuration list for PBXProject "GymBro" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				032F31A760A01EED3667D97C /* Debug */,
+				EBC364C2D9330AF2E7F239E8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		A2FE653BAF26F2153B50AC2F /* Build configuration list for PBXNativeTarget "GymBro" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				24918BE2D0F03E7CBAE7F13B /* Debug */,
+				DE977F642EB8DBB75805CB64 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		02B229AC443A242FB1D287E0 /* XCRemoteSwiftPackageReference "meta-wearables-dat-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/facebook/meta-wearables-dat-ios";
+			requirement = {
+				kind = exactVersion;
+				version = 0.4.0;
+			};
+		};
+		BA08829B9B4F2374379BA144 /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase-community/supabase-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		5F0B24793216F6AB7DDF461E /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BA08829B9B4F2374379BA144 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
+		};
+		610AEF5F4E2D763F3AC345F9 /* MWDATCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 02B229AC443A242FB1D287E0 /* XCRemoteSwiftPackageReference "meta-wearables-dat-ios" */;
+			productName = MWDATCore;
+		};
+		97E63DFDEA9A030F7F063CDE /* MWDATMockDevice */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 02B229AC443A242FB1D287E0 /* XCRemoteSwiftPackageReference "meta-wearables-dat-ios" */;
+			productName = MWDATMockDevice;
+		};
+		BC04903EA56C4A6B0FE8A6D0 /* MWDATCamera */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 02B229AC443A242FB1D287E0 /* XCRemoteSwiftPackageReference "meta-wearables-dat-ios" */;
+			productName = MWDATCamera;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 81AF65F84AF2CDDD90C220B4 /* Project object */;
+}
