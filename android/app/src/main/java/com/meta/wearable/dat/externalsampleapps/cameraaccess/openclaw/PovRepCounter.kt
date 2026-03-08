@@ -332,6 +332,7 @@ class PovRepCounter(context: Context) {
             bitmap = overlayBitmap,
             repCount = repCount,
             currentAngle = forearmAngle,
+            wristY = trackY,
             stage = stage,
             activeArm = "POV"
         )

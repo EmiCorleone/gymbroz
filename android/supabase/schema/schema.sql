@@ -52,13 +52,16 @@ CREATE TABLE public.exercise_sets (
 );
 
 -- Rep Events Table
--- Logs precise timestamps for every single rep detected during an exercise.
+-- Logs precise timestamps and pose estimation data for every single rep detected.
 CREATE TABLE public.rep_events (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     session_id UUID NOT NULL REFERENCES public.workout_sessions(id) ON DELETE CASCADE,
     user_id UUID NOT NULL REFERENCES public.user_profiles(id) ON DELETE CASCADE,
     exercise_name TEXT NOT NULL,
     rep_number INTEGER NOT NULL,
+    wrist_y REAL DEFAULT 0,
+    forearm_angle REAL DEFAULT 0,
+    stage TEXT,
     timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 

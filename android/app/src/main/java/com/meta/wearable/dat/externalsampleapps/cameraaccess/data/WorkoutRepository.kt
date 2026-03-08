@@ -160,31 +160,89 @@ class WorkoutRepository(context: Context) {
     suspend fun logRepEvent(
         sessionId: Long,
         exerciseName: String,
-        repNumber: Int
+        repNumber: Int,
+        wristY: Float = 0f,
+        forearmAngle: Float = 0f,
+        stage: String? = null
     ) {
         // Sync directly to Supabase since we don't have a local representation of rep_events
         try {
             val auth = GymBroSupabaseClient.client.auth
             val postgrest = GymBroSupabaseClient.client.postgrest
             val userId = auth.currentUserOrNull()?.id ?: return
-            
+
             @kotlinx.serialization.Serializable
             data class SupabaseRepEvent(
                 val session_id: String,
                 val user_id: String,
                 val exercise_name: String,
-                val rep_number: Int
+                val rep_number: Int,
+                val wrist_y: Float,
+                val forearm_angle: Float,
+                val stage: String?
             )
-            
+
             val supabaseEvent = SupabaseRepEvent(
                 session_id = sessionId.toString(),
                 user_id = userId,
                 exercise_name = exerciseName,
-                rep_number = repNumber
+                rep_number = repNumber,
+                wrist_y = wristY,
+                forearm_angle = forearmAngle,
+                stage = stage
             )
             postgrest.from("rep_events").insert(supabaseEvent)
         } catch (e: Exception) {
             e.printStackTrace()
+        }
+    }
+
+    suspend fun logPoseFramesBatch(
+        sessionId: Long,
+        frames: List<com.meta.wearable.dat.externalsampleapps.cameraaccess.openclaw.PoseFrameData>
+    ) {
+        if (frames.isEmpty()) return
+        try {
+            val auth = GymBroSupabaseClient.client.auth
+            val postgrest = GymBroSupabaseClient.client.postgrest
+            val userId = auth.currentUserOrNull()?.id ?: return
+
+            @kotlinx.serialization.Serializable
+            data class SupabasePoseFrame(
+                val session_id: String,
+                val user_id: String,
+                val frame_index: Int,
+                val timestamp_ms: Long,
+                val landmarks: kotlinx.serialization.json.JsonElement,
+                val left_elbow_angle: Float?,
+                val right_elbow_angle: Float?,
+                val active_arm: String,
+                val stage: String?,
+                val rep_count: Int
+            )
+
+            val json = kotlinx.serialization.json.Json
+            val rows = frames.map { f ->
+                SupabasePoseFrame(
+                    session_id = sessionId.toString(),
+                    user_id = userId,
+                    frame_index = f.frameIndex,
+                    timestamp_ms = f.timestampMs,
+                    landmarks = json.parseToJsonElement(
+                        json.encodeToString(kotlinx.serialization.builtins.ListSerializer(
+                            kotlinx.serialization.builtins.ListSerializer(kotlinx.serialization.serializer<Float>())
+                        ), f.landmarks)
+                    ),
+                    left_elbow_angle = f.leftElbowAngle,
+                    right_elbow_angle = f.rightElbowAngle,
+                    active_arm = f.activeArm,
+                    stage = f.stage,
+                    rep_count = f.repCount
+                )
+            }
+            postgrest.from("pose_frames").insert(rows)
+        } catch (e: Exception) {
+            android.util.Log.e("WorkoutRepo", "Failed to upload pose frames batch", e)
         }
     }
 

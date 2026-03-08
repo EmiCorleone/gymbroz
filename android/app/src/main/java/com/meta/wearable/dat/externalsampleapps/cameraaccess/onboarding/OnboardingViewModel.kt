@@ -137,6 +137,8 @@ class OnboardingViewModel(application: Application) : AndroidViewModel(applicati
                         val storage = com.meta.wearable.dat.externalsampleapps.cameraaccess.data.GymBroSupabaseClient.client.storage
                         val bucket = storage.from("gymbro_assets")
                         val remotePath = "$userId/mirror_photo_${System.currentTimeMillis()}.jpg"
+
+
                         bucket.upload(remotePath, file.readBytes(), upsert = true)
                         remotePhotoUrl = bucket.publicUrl(remotePath)
                     }

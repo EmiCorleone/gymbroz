@@ -22,8 +22,20 @@ data class PoseOverlayData(
     val bitmap: Bitmap? = null,
     val repCount: Int = 0,
     val currentAngle: Float = 0f,
+    val wristY: Float = 0f,
     val stage: String? = null,
     val activeArm: String = ""
+)
+
+data class PoseFrameData(
+    val frameIndex: Int,
+    val timestampMs: Long,
+    val landmarks: List<List<Float>>,
+    val leftElbowAngle: Float?,
+    val rightElbowAngle: Float?,
+    val activeArm: String,
+    val stage: String?,
+    val repCount: Int
 )
 
 class PoseDetectionManager(context: Context) {
@@ -58,6 +70,16 @@ class PoseDetectionManager(context: Context) {
 
     private val _overlayData = MutableStateFlow(PoseOverlayData())
     val overlayData: StateFlow<PoseOverlayData> = _overlayData.asStateFlow()
+
+    private var frameIndex = 0
+    private val _frameBuffer = mutableListOf<PoseFrameData>()
+    val frameBuffer: List<PoseFrameData> get() = _frameBuffer
+
+    fun drainFrameBuffer(): List<PoseFrameData> {
+        val frames = _frameBuffer.toList()
+        _frameBuffer.clear()
+        return frames
+    }
 
     private val skeletonPaint = Paint().apply {
         color = Color.parseColor("#00ff88")
@@ -229,6 +251,44 @@ class PoseDetectionManager(context: Context) {
             }
         }
 
+        // Capture frame data for RL export (every 3rd frame = ~10fps)
+        if (frameIndex % 3 == 0) {
+            val landmarkData = landmarks.map { lm ->
+                listOf(lm.x(), lm.y(), lm.z(), if (lm.visibility().isPresent) lm.visibility().get() else 0f)
+            }
+            val leftAngle = run {
+                val (a, b, c) = LEFT_ARM
+                if (a < landmarks.size && b < landmarks.size && c < landmarks.size) {
+                    calculateAngle(
+                        landmarks[a].x(), landmarks[a].y(), landmarks[a].z(),
+                        landmarks[b].x(), landmarks[b].y(), landmarks[b].z(),
+                        landmarks[c].x(), landmarks[c].y(), landmarks[c].z()
+                    )
+                } else null
+            }
+            val rightAngle = run {
+                val (a, b, c) = RIGHT_ARM
+                if (a < landmarks.size && b < landmarks.size && c < landmarks.size) {
+                    calculateAngle(
+                        landmarks[a].x(), landmarks[a].y(), landmarks[a].z(),
+                        landmarks[b].x(), landmarks[b].y(), landmarks[b].z(),
+                        landmarks[c].x(), landmarks[c].y(), landmarks[c].z()
+                    )
+                } else null
+            }
+            _frameBuffer.add(PoseFrameData(
+                frameIndex = frameIndex,
+                timestampMs = timestampMs,
+                landmarks = landmarkData,
+                leftElbowAngle = leftAngle,
+                rightElbowAngle = rightAngle,
+                activeArm = activeArm,
+                stage = stage,
+                repCount = repCount
+            ))
+        }
+        frameIndex++
+
         // Draw HUD
         val hudLeft = 20f
         val hudTop = 20f
@@ -270,6 +330,8 @@ class PoseDetectionManager(context: Context) {
         stage = null
         currentAngle = 0f
         activeArm = ""
+        frameIndex = 0
+        _frameBuffer.clear()
         _overlayData.value = PoseOverlayData()
     }
 

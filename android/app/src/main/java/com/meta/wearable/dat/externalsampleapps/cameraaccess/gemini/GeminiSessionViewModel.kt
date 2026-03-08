@@ -145,6 +145,7 @@ class GeminiSessionViewModel(application: Application) : AndroidViewModel(applic
                 var wasSpeaking = false
                 var lastRepCount = -1
                 var lastRepInjectionTime = 0L
+                var poseFlushCount = 0
                 while (isActive) {
                     delay(100)
                     val isSpeaking = geminiService.isModelSpeaking.value
@@ -167,10 +168,17 @@ class GeminiSessionViewModel(application: Application) : AndroidViewModel(applic
                     if (repCounterActive && currentReps != lastRepCount && currentReps > 0) {
                         lastRepCount = currentReps
                         
-                        // Log to Supabase immediately in the background
+                        // Log to Supabase with pose estimation data
                         currentSessionId?.let { sId ->
                             viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
-                                repository.logRepEvent(sId, exerciseName, currentReps)
+                                repository.logRepEvent(
+                                    sessionId = sId,
+                                    exerciseName = exerciseName,
+                                    repNumber = currentReps,
+                                    wristY = poseData.wristY,
+                                    forearmAngle = poseData.currentAngle,
+                                    stage = poseData.stage
+                                )
                             }
                         }
 
@@ -180,6 +188,18 @@ class GeminiSessionViewModel(application: Application) : AndroidViewModel(applic
                                 "[System update — do NOT respond to this message verbally unless asked. " +
                                 "Rep counter: ${exerciseName}, current count: $currentReps reps]"
                             )
+                        }
+                    }
+                    poseFlushCount++
+                    // Flush pose frame buffer every ~3 seconds
+                    if (poseFlushCount % 30 == 0) {
+                        val framesToUpload = poseDetectionManager?.drainFrameBuffer() ?: emptyList()
+                        if (framesToUpload.isNotEmpty()) {
+                            currentSessionId?.let { sId ->
+                                viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                                    repository.logPoseFramesBatch(sId, framesToUpload)
+                                }
+                            }
                         }
                     }
                     _uiState.value = _uiState.value.copy(
@@ -238,6 +258,15 @@ class GeminiSessionViewModel(application: Application) : AndroidViewModel(applic
         geminiService.disconnect()
         stateObservationJob?.cancel()
         stateObservationJob = null
+        // Flush remaining pose frames
+        val remainingFrames = poseDetectionManager?.drainFrameBuffer() ?: emptyList()
+        if (remainingFrames.isNotEmpty()) {
+            currentSessionId?.let { sId ->
+                viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                    repository.logPoseFramesBatch(sId, remainingFrames)
+                }
+            }
+        }
         povRepCounter?.reset()
         _uiState.value = GeminiUiState()
     }
