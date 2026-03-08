@@ -56,7 +56,7 @@ class OnboardingViewModel(application: Application) : AndroidViewModel(applicati
                 val auth = com.meta.wearable.dat.externalsampleapps.cameraaccess.data.GymBroSupabaseClient.client.auth
                 val emailValue = _state.value.email
                 val passwordValue = _state.value.password
-                
+
                 if (isSignUp) {
                     auth.signUpWith(io.github.jan.supabase.gotrue.providers.builtin.Email) {
                         email = emailValue
@@ -68,11 +68,47 @@ class OnboardingViewModel(application: Application) : AndroidViewModel(applicati
                         password = passwordValue
                     }
                 }
+
+                // Admin shortcut — skip onboarding with pre-configured profile
+                if (emailValue.equals("admin@admin.com", ignoreCase = true)) {
+                    setupAdminProfile()
+                    return@launch
+                }
+
                 onSuccess()
             } catch (e: Exception) {
                 onError(e.message ?: "Authentication failed")
             }
         }
+    }
+
+    private suspend fun setupAdminProfile() {
+        val app = getApplication<android.app.Application>()
+
+        // Extract admin profile photo from assets to internal storage
+        val photosDir = java.io.File(app.filesDir, "photos")
+        photosDir.mkdirs()
+        val photoFile = java.io.File(photosDir, "mirror_selfie.jpg")
+        if (!photoFile.exists()) {
+            app.assets.open("admin_profile.jpg").use { input ->
+                photoFile.outputStream().use { output -> input.copyTo(output) }
+            }
+        }
+
+        val profile = UserProfile(
+            name = "Admin",
+            gender = "Male",
+            age = 28,
+            heightCm = 178,
+            weightKg = 80,
+            fitnessGoal = "Build Muscle",
+            experienceLevel = "Intermediate",
+            weeklyWorkouts = "3-5",
+            mirrorPhotoPath = photoFile.absolutePath
+        )
+        repository.saveProfile(profile)
+        OnboardingRepository(app).save("Male", "3-5")
+        _isOnboardingComplete.value = true
     }
 
     fun updateName(name: String) {

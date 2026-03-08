@@ -164,6 +164,9 @@ fun MainAppContainer(
                                         onDismiss = {
                                             planScreen = "camera"
                                             showPlanOverlay = false
+                                        },
+                                        onRequestGuide = { name ->
+                                            healthViewModel.generateSingleExerciseGuide(name)
                                         }
                                     )
                                 }

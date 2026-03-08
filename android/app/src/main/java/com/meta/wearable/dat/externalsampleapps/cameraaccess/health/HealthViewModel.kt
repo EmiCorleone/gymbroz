@@ -269,6 +269,62 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
         _uiState.update { it.copy(exerciseGuide = ExerciseGuideUiState()) }
     }
 
+    fun generateSingleExerciseGuide(exerciseName: String) {
+        val existing = _uiState.value.exerciseGuides[exerciseName]
+        if (existing?.imageBase64 != null || existing?.isGenerating == true) return
+
+        Log.d("HealthViewModel", "generateSingleExerciseGuide: $exerciseName")
+        _uiState.update {
+            it.copy(exerciseGuides = it.exerciseGuides + (exerciseName to ExerciseGuideUiState(isGenerating = true, exerciseName = exerciseName)))
+        }
+
+        viewModelScope.launch {
+            val fullBodyResult = withContext(Dispatchers.IO) { generateGuideImage(exerciseName) }
+            val fullBodyBase64 = fullBodyResult.getOrNull()
+
+            val closeUpResult = withContext(Dispatchers.IO) { generateCloseUpImage(exerciseName) }
+            val closeUpBase64 = closeUpResult.getOrNull()
+
+            val error = if (fullBodyBase64 == null && closeUpBase64 == null) {
+                fullBodyResult.exceptionOrNull()?.message ?: "Failed"
+            } else null
+
+            val guideState = ExerciseGuideUiState(
+                imageBase64 = fullBodyBase64,
+                closeUpImageBase64 = closeUpBase64,
+                exerciseName = exerciseName,
+                error = error,
+            )
+            _uiState.update {
+                it.copy(exerciseGuides = it.exerciseGuides + (exerciseName to guideState))
+            }
+            Log.d("HealthViewModel", "$exerciseName done — fullBody=${fullBodyBase64 != null}, closeUp=${closeUpBase64 != null}")
+
+            // Save to disk + DB
+            if (fullBodyBase64 != null || closeUpBase64 != null) {
+                withContext(Dispatchers.IO) {
+                    val safeName = exerciseName.replace(Regex("[^a-zA-Z0-9]"), "_")
+                    val fullBodyPath = fullBodyBase64?.let { base64 ->
+                        val file = java.io.File(guideImagesDir, "${safeName}_full.jpg")
+                        file.writeBytes(Base64.decode(base64, Base64.DEFAULT))
+                        file.absolutePath
+                    }
+                    val closeUpPath = closeUpBase64?.let { base64 ->
+                        val file = java.io.File(guideImagesDir, "${safeName}_closeup.jpg")
+                        file.writeBytes(Base64.decode(base64, Base64.DEFAULT))
+                        file.absolutePath
+                    }
+                    guideDao.upsert(ExerciseGuideImage(
+                        exerciseName = exerciseName,
+                        fullBodyPath = fullBodyPath,
+                        closeUpPath = closeUpPath,
+                    ))
+                }
+                Log.d("HealthViewModel", "Saved $exerciseName to disk+DB")
+            }
+        }
+    }
+
     private var allGuidesJob: Job? = null
 
     fun generateAllExerciseGuides(exercises: List<String>) {

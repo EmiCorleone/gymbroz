@@ -58,6 +58,7 @@ fun ActiveWorkoutScreen(
     exerciseGuides: Map<String, ExerciseGuideUiState> = emptyMap(),
     onComplete: () -> Unit,
     onDismiss: () -> Unit = onComplete,
+    onRequestGuide: ((String) -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     if (workout.exercises.isEmpty()) return
@@ -70,10 +71,13 @@ fun ActiveWorkoutScreen(
     val totalExercises = workout.exercises.size
     val guide = exerciseGuides[currentExercise.name]
 
-    Log.d("ActiveWorkoutScreen", "exercise=$currentExerciseIndex '${currentExercise.name}' " +
-        "guide=${guide != null} isGenerating=${guide?.isGenerating} " +
-        "hasFullBody=${guide?.imageBase64 != null} hasCloseUp=${guide?.closeUpImageBase64 != null} " +
-        "guidesMapSize=${exerciseGuides.size} guidesKeys=${exerciseGuides.keys.take(5)}")
+    // Auto-request guide generation for exercises without images
+    LaunchedEffect(currentExercise.name) {
+        if (guide == null && onRequestGuide != null) {
+            Log.d("ActiveWorkoutScreen", "Requesting guide generation for '${currentExercise.name}'")
+            onRequestGuide(currentExercise.name)
+        }
+    }
 
     LaunchedEffect(currentExerciseIndex) { currentSet = 1 }
 
